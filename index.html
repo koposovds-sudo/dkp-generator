@@ -1,0 +1,962 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f5f5f7">
+  <title>ДКП — документы в договор</title>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    :root{
+      --bg:#f5f5f7;--card:rgba(255,255,255,.86);--text:#1d1d1f;--muted:#6e6e73;
+      --line:rgba(0,0,0,.11);--blue:#0071e3;--blue2:#0077ed;--green:#248a3d;
+      --yellow:#9a6700;--red:#d70015;--shadow:0 8px 30px rgba(0,0,0,.07);
+      --r:22px;--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px
+    }
+    @media(prefers-color-scheme:dark){
+      :root{
+        --bg:#000;--card:rgba(28,28,30,.92);--text:#f5f5f7;--muted:#a1a1a6;
+        --line:rgba(255,255,255,.14);--blue:#0a84ff;--blue2:#409cff;
+        --green:#30d158;--yellow:#ffd60a;--red:#ff453a;--shadow:none
+      }
+    }
+    *{box-sizing:border-box}
+    html{
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+      background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased
+    }
+    body{
+      margin:0;min-height:100dvh;
+      background:radial-gradient(circle at 50% -10%,rgba(0,113,227,.10),transparent 32rem),var(--bg)
+    }
+    button,input{font:inherit}button{cursor:pointer}
+    .shell{
+      max-width:820px;margin:auto;
+      padding:0 max(20px,env(safe-area-inset-left)) calc(120px + env(safe-area-inset-bottom))
+    }
+    .topbar{
+      height:72px;display:flex;align-items:center;justify-content:space-between;
+      position:sticky;top:0;z-index:10;
+      background:color-mix(in srgb,var(--bg) 82%,transparent);
+      backdrop-filter:saturate(180%) blur(20px);
+      border-bottom:1px solid var(--line)
+    }
+    .brand{display:flex;align-items:center;gap:10px;font-weight:700}
+    .logo{width:32px;height:32px}
+    .privacy{font-size:13px;color:var(--muted)}
+    main{padding-top:44px}
+    .eyebrow{color:var(--blue);font-weight:650;margin:0 0 12px}
+    .hero h1{
+      font-size:clamp(38px,8vw,64px);letter-spacing:-.045em;line-height:.96;
+      margin:0;max-width:760px
+    }
+    .hero p{
+      font-size:clamp(18px,4vw,24px);line-height:1.35;color:var(--muted);
+      margin:22px 0 0;max-width:650px
+    }
+    .steps{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:5px;
+      margin:34px 0 24px;padding:5px;
+      background:rgba(118,118,128,.10);border-radius:14px
+    }
+    .step{
+      padding:11px 4px;text-align:center;font-size:13px;
+      color:var(--muted);border-radius:10px
+    }
+    .step.on{
+      background:var(--card);color:var(--text);font-weight:650;
+      box-shadow:0 2px 8px rgba(0,0,0,.08)
+    }
+    .panel{
+      background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+      box-shadow:var(--shadow);padding:clamp(20px,5vw,34px);margin-bottom:20px
+    }
+    .panel h2{font-size:27px;letter-spacing:-.025em;margin:0 0 8px}
+    .hint{color:var(--muted);font-size:15px;line-height:1.4;margin:0 0 24px}
+    .uploads{display:grid;gap:10px}
+    .upload{
+      display:flex;align-items:center;min-height:70px;padding:13px 14px;
+      border:1px solid var(--line);border-radius:15px;
+      background:color-mix(in srgb,var(--card) 75%,var(--bg));
+      position:relative;transition:.2s
+    }
+    .upload:active{transform:scale(.99)}
+    .upload input{
+      position:absolute;inset:0;opacity:0;width:100%;cursor:pointer
+    }
+    .docicon{
+      width:42px;height:42px;border-radius:12px;
+      background:rgba(0,113,227,.10);color:var(--blue);
+      display:grid;place-items:center;margin-right:13px;flex:none
+    }
+    .utext{min-width:0}.utitle{font-weight:650}
+    .usub{
+      color:var(--muted);font-size:13px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px
+    }
+    .upload.ready .docicon{background:rgba(36,138,61,.12);color:var(--green)}
+    .upload.ready{border-color:color-mix(in srgb,var(--green) 35%,var(--line))}
+    .twocol{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .field{margin-top:16px}
+    .field label{
+      display:block;font-size:13px;font-weight:600;margin:0 0 7px
+    }
+    .input{
+      width:100%;min-height:50px;border:1px solid var(--line);border-radius:12px;
+      padding:11px 13px;
+      background:color-mix(in srgb,var(--card) 80%,var(--bg));
+      color:var(--text);outline:0
+    }
+    .input:focus{
+      border-color:var(--blue);
+      box-shadow:0 0 0 4px rgba(0,113,227,.12)
+    }
+    .actions{display:flex;gap:10px;margin-top:22px}
+    .btn{
+      min-height:50px;border:0;border-radius:999px;
+      padding:0 22px;font-weight:650;
+      background:rgba(118,118,128,.12);color:var(--text)
+    }
+    .btn.primary{background:var(--blue);color:#fff;flex:1}
+    .btn.primary:active{background:var(--blue2);transform:scale(.99)}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    .hidden{display:none!important}
+    .progress-wrap{
+      height:7px;background:rgba(118,118,128,.13);
+      border-radius:99px;overflow:hidden;margin:24px 0 12px
+    }
+    .progress{
+      height:100%;width:0;background:var(--blue);
+      border-radius:99px;transition:width .25s
+    }
+    .status{font-size:15px;color:var(--muted);min-height:44px}
+    .cancel{color:var(--blue);background:none;border:0;padding:12px 0}
+    .review-grid{display:grid;gap:10px}
+    .checkrow{padding:14px;border:1px solid var(--line);border-radius:14px}
+    .checkhead{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+    .dot{width:9px;height:9px;border-radius:50%;flex:none}
+    .dot.green{background:var(--green)}
+    .dot.yellow{background:var(--yellow)}
+    .dot.red{background:var(--red)}
+    .checktitle{font-weight:650}
+    .sources{font-size:12px;color:var(--muted);line-height:1.5}
+    .value{
+      margin-top:8px;width:100%;border:0;border-bottom:1px solid var(--line);
+      background:transparent;color:var(--text);font-size:16px;
+      padding:8px 0;outline:none
+    }
+    .mismatch{
+      display:flex;align-items:flex-start;gap:9px;margin-top:10px;
+      padding:10px;border-radius:10px;
+      background:rgba(215,0,21,.07);font-size:13px;color:var(--red)
+    }
+    .mismatch input{margin-top:2px}
+    .risk{padding:12px 0;border-bottom:1px solid var(--line)}
+    .risk:last-child{border:0}
+    .contract{
+      background:#fff;color:#111;border-radius:8px;
+      padding:clamp(18px,5vw,48px);
+      font-family:"Times New Roman",serif;font-size:14px;
+      line-height:1.45;box-shadow:var(--shadow)
+    }
+    .contract h2{text-align:center;font-size:19px}
+    .contract .right{text-align:right}
+    .contract table{width:100%;border-collapse:collapse}
+    .contract td{
+      vertical-align:top;padding:12px 7px;border-top:1px solid #bbb
+    }
+    .sticky{
+      position:fixed;left:0;right:0;bottom:0;z-index:20;
+      padding:12px max(20px,env(safe-area-inset-left))
+              calc(12px + env(safe-area-inset-bottom));
+      background:color-mix(in srgb,var(--bg) 80%,transparent);
+      backdrop-filter:saturate(180%) blur(22px);
+      border-top:1px solid var(--line)
+    }
+    .stickyin{
+      max-width:780px;margin:auto;display:flex;gap:10px
+    }
+    .notice{font-size:13px;color:var(--muted);padding:12px 0}
+    .errorbox{
+      padding:14px;border-radius:13px;
+      background:rgba(215,0,21,.08);color:var(--red);
+      font-size:14px;margin:12px 0
+    }
+    .okbox{
+      padding:14px;border-radius:13px;
+      background:rgba(36,138,61,.10);color:var(--green);
+      font-size:14px;margin:12px 0
+    }
+    @media(max-width:560px){
+      main{padding-top:30px}
+      .twocol{grid-template-columns:1fr}
+      .steps{overflow:hidden}
+      .step{font-size:11px}
+      .panel{padding:20px}
+      .privacy{display:none}
+      .actions{flex-direction:column}
+      .stickyin .btn{padding:0 15px}
+      .hero h1{font-size:42px}
+    }
+    @media print{
+      body{background:#fff}
+      .topbar,.hero,.steps,.sticky,.noprint{display:none!important}
+      .shell{max-width:none;padding:0}
+      main{padding:0}
+      .panel{border:0;box-shadow:none;padding:0}
+      .contract{box-shadow:none;padding:0}
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" fill="none" aria-label="ДКП">
+        <rect x="2" y="2" width="28" height="28" rx="8" stroke="currentColor" stroke-width="2"/>
+        <path d="M10 21h12M12 21l1-10h7l1 10M15 17h3"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>ДКП</span>
+    </div>
+    <span class="privacy">Обработка на устройстве</span>
+  </header>
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Договор за несколько минут</p>
+      <h1>Документы на вход.<br>Готовый ДКП на выходе.</h1>
+      <p>Загрузите документы. Приложение распознает данные, сверит СТС, ПТС или ЭПТС и отчёт Автотеки, затем подготовит договор.</p>
+    </section>
+
+    <nav class="steps" aria-label="Этапы">
+      <div class="step on" data-step="1">1. Загрузка</div>
+      <div class="step" data-step="2">2. OCR</div>
+      <div class="step" data-step="3">3. Проверка</div>
+      <div class="step" data-step="4">4. ДКП</div>
+    </nav>
+
+    <!-- Экран 1: загрузка -->
+    <section id="screen1" class="screen">
+      <div class="panel">
+        <h2>Документы автомобиля</h2>
+        <p class="hint">
+          СТС загружается двумя отдельными фотографиями.
+          Для Автотеки лучше приложить PDF‑отчёт: одну ссылку браузер прочитать не сможет.
+        </p>
+        <div class="uploads">
+          <label class="upload" data-upload="stsFront">
+            <input type="file" accept="image/*" capture="environment">
+            <span class="docicon">▣</span>
+            <span class="utext">
+              <span class="utitle">СТС · лицевая сторона</span>
+              <span class="usub">Фото обязательно</span>
+            </span>
+          </label>
+          <label class="upload" data-upload="stsBack">
+            <input type="file" accept="image/*" capture="environment">
+            <span class="docicon">▣</span>
+            <span class="utext">
+              <span class="utitle">СТС · оборотная сторона</span>
+              <span class="usub">Фото обязательно</span>
+            </span>
+          </label>
+          <label class="upload" data-upload="pts">
+            <input type="file" accept="image/*,.pdf,application/pdf">
+            <span class="docicon">▤</span>
+            <span class="utext">
+              <span class="utitle">ПТС или выписка ЭПТС</span>
+              <span class="usub">Фото или PDF</span>
+            </span>
+          </label>
+          <label class="upload" data-upload="autoteka">
+            <input type="file" accept=".pdf,application/pdf,text/plain,text/html">
+            <span class="docicon">✓</span>
+            <span class="utext">
+              <span class="utitle">Отчёт Автотеки</span>
+              <span class="usub">PDF — для автоматической сверки</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="autotekaUrl">Ссылка на Автотеку (дополнительно)</label>
+          <input class="input" id="autotekaUrl" inputmode="url" placeholder="https://autoteka.ru/...">
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Продавец</h2>
+        <p class="hint">Основной разворот и страница с актуальной регистрацией.</p>
+        <div class="twocol">
+          <label class="upload" data-upload="sellerMain">
+            <input type="file" accept="image/*" capture="environment">
+            <span class="docicon">▣</span>
+            <span class="utext">
+              <span class="utitle">Разворот паспорта</span>
+              <span class="usub">Фото обязательно</span>
+            </span>
+          </label>
+          <label class="upload" data-upload="sellerReg">
+            <input type="file" accept="image/*" capture="environment">
+            <span class="docicon">▣</span>
+            <span class="utext">
+              <span class="utitle">Регистрация</span>
+              <span class="usub">Фото обязательно</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Покупатель</h2>
+        <p class="hint">Основной разворот и страница с актуальной регистрацией.</p>
+        <div class="twocol">
+          <label class="upload" data-upload="buyerMain">
+            <input type="file" accept="image/*" capture="environment">
+            <span class="docicon">▣</span>
+            <span class="utext">
+              <span class="utitle">Разворот паспорта</span>
+              <span class="usub">Фото обязательно</span>
+            </span>
+          </label>
+          <label class="upload" data-upload="buyerReg">
+            <input type="file" accept="image/*" capture="environment">
+            <span class="docicon">▣</span>
+            <span class="utext">
+              <span class="utitle">Регистрация</span>
+              <span class="usub">Фото обязательно</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Условия сделки</h2>
+        <div class="twocol">
+          <div class="field">
+            <label for="price">Цена, ₽</label>
+            <input class="input" id="price" inputmode="numeric" placeholder="1 500 000">
+          </div>
+          <div class="field">
+            <label for="date">Дата договора</label>
+            <input class="input" id="date" type="date">
+          </div>
+        </div>
+        <div class="field">
+          <label for="city">Место заключения</label>
+          <input class="input" id="city" placeholder="Москва">
+        </div>
+        <div id="uploadError" class="errorbox hidden"></div>
+      </div>
+    </section>
+
+    <!-- Экран 2: OCR -->
+    <section id="screen2" class="screen hidden">
+      <div class="panel">
+        <h2>Читаю документы</h2>
+        <div class="progress-wrap"><div id="progress" class="progress"></div></div>
+        <p id="status" class="status">Подготавливаю распознавание…</p>
+        <button id="cancel" class="cancel">Отменить обработку</button>
+      </div>
+      <p class="notice">
+        Изображения уменьшаются перед распознаванием, а документы обрабатываются по одному —
+        это снижает нагрузку на телефон.
+      </p>
+    </section>
+
+    <!-- Экран 3: проверка -->
+    <section id="screen3" class="screen hidden">
+      <div class="panel">
+        <h2>Сверка автомобиля</h2>
+        <p class="hint">
+          Зелёный — совпало; жёлтый — данных недостаточно;
+          красный — найдено расхождение.
+        </p>
+        <div id="vehicleChecks" class="review-grid"></div>
+        <div id="mismatchInfo"></div>
+      </div>
+      <div class="panel">
+        <h2>Риски Автотеки</h2>
+        <div id="riskChecks"></div>
+      </div>
+      <div class="panel">
+        <h2>Стороны договора</h2>
+        <div id="peopleFields"></div>
+      </div>
+    </section>
+
+    <!-- Экран 4: договор -->
+    <section id="screen4" class="screen hidden">
+      <div class="panel noprint">
+        <h2>Договор готов</h2>
+        <p class="hint">
+          Ещё раз проверьте данные перед подписанием.
+          Скачайте Word‑файл или сохраните PDF через печать.
+        </p>
+      </div>
+      <article id="contract" class="contract"></article>
+    </section>
+  </main>
+</div>
+
+<div class="sticky">
+  <div class="stickyin">
+    <button id="back" class="btn hidden">Назад</button>
+    <button id="primary" class="btn primary">Распознать и сверить</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+}
+
+const docs = {};
+let step = 1, cancelled = false, worker = null, parsed = {}, mismatches = [];
+
+const vehicleFields = [
+  ['vin','VIN'],
+  ['makeModel','Марка и модель'],
+  ['year','Год выпуска'],
+  ['plate','Госномер'],
+  ['body','Кузов №'],
+  ['chassis','Шасси №'],
+  ['color','Цвет'],
+  ['ptsNumber','ПТС / ЭПТС'],
+  ['stsNumber','СТС']
+];
+
+const peopleSchema = [
+  ['fio','ФИО'],
+  ['birth','Дата рождения'],
+  ['passport','Серия и номер паспорта'],
+  ['issuedBy','Кем выдан'],
+  ['issueDate','Дата выдачи'],
+  ['deptCode','Код подразделения'],
+  ['address','Адрес регистрации']
+];
+
+const required = [
+  'stsFront','stsBack','pts','autoteka',
+  'sellerMain','sellerReg','buyerMain','buyerReg'
+];
+
+const el = id => document.getElementById(id);
+
+// загрузка файлов
+document.querySelectorAll('.upload input').forEach(inp => {
+  inp.addEventListener('change', e => {
+    const box = e.target.closest('.upload');
+    const key = box.dataset.upload;
+    const file = e.target.files[0];
+    if (!file) return;
+    docs[key] = file;
+    box.classList.add('ready');
+    box.querySelector('.usub').textContent = '✓ ' + file.name;
+  });
+});
+
+el('date').value = new Date().toISOString().slice(0,10);
+
+el('price').addEventListener('input', e => {
+  const n = e.target.value.replace(/\D/g,'');
+  e.target.value = n ? Number(n).toLocaleString('ru-RU') : '';
+});
+
+el('primary').onclick = () => {
+  if (step === 1) startOCR();
+  else if (step === 3) buildContractIfValid();
+  else if (step === 4) downloadDoc();
+};
+
+el('back').onclick = () => {
+  if (step === 3) show(1);
+  else if (step === 4) show(3);
+};
+
+el('cancel').onclick = () => {
+  cancelled = true;
+  show(1);
+};
+
+function show(n) {
+  step = n;
+  document.querySelectorAll('.screen')
+    .forEach((s,i) => s.classList.toggle('hidden', i !== n-1));
+  document.querySelectorAll('.step')
+    .forEach(s => s.classList.toggle('on', +s.dataset.step === n));
+  el('back').classList.toggle('hidden', n < 3);
+  el('primary').textContent =
+    n === 1 ? 'Распознать и сверить' :
+    n === 3 ? 'Сформировать договор' :
+    n === 4 ? 'Скачать Word' :
+    'Продолжить';
+  if (n === 2) el('primary').classList.add('hidden');
+  else el('primary').classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function validate() {
+  const miss = required.filter(k => !docs[k]);
+  const deal = [];
+  if (!el('price').value) deal.push('цена');
+  if (!el('date').value) deal.push('дата');
+  if (!el('city').value.trim()) deal.push('место сделки');
+  if (miss.length || deal.length) {
+    el('uploadError').textContent =
+      'Добавьте все обязательные документы' +
+      (deal.length ? ' и заполните: ' + deal.join(', ') : '') + '.';
+    el('uploadError').classList.remove('hidden');
+    return false;
+  }
+  el('uploadError').classList.add('hidden');
+  return true;
+}
+
+async function startOCR() {
+  if (!validate()) return;
+  cancelled = false;
+  show(2);
+  try {
+    parsed = {texts:{},sources:{},people:{seller:{},buyer:{}}};
+    const jobs = required.map(k => [k, docs[k]]);
+    let done = 0;
+    for (const [key,file] of jobs) {
+      if (cancelled) return;
+      setStatus(labelFor(key), done/jobs.length);
+      const text = await readDocument(file, key);
+      parsed.texts[key] = text;
+      parsed.sources[key] = extractVehicle(text);
+      done++;
+      setStatus(labelFor(key), done/jobs.length);
+      await new Promise(r => setTimeout(r, 30));
+    }
+    if (worker) { try { await worker.terminate(); } catch(_){} worker = null; }
+    parsed.people.seller = extractPerson(parsed.texts.sellerMain + '\n' + parsed.texts.sellerReg);
+    parsed.people.buyer = extractPerson(parsed.texts.buyerMain + '\n' + parsed.texts.buyerReg);
+    renderReview();
+    show(3);
+  } catch(e) {
+    console.error(e);
+    if (worker) { try { await worker.terminate(); } catch(_){} worker = null; }
+    show(1);
+    el('uploadError').textContent =
+      'Не удалось прочитать один из файлов: ' + (e.message||e) +
+      '. Попробуйте более чёткое фото или PDF.';
+    el('uploadError').classList.remove('hidden');
+  }
+}
+
+function labelFor(k){
+  return ({
+    stsFront:'СТС: лицевая сторона',
+    stsBack:'СТС: оборотная сторона',
+    pts:'ПТС / ЭПТС',
+    autoteka:'Отчёт Автотеки',
+    sellerMain:'Паспорт продавца',
+    sellerReg:'Регистрация продавца',
+    buyerMain:'Паспорт покупателя',
+    buyerReg:'Регистрация покупателя'
+  })[k];
+}
+
+function setStatus(text, p){
+  el('status').textContent = text;
+  el('progress').style.width = Math.round(p*100) + '%';
+}
+
+async function readDocument(file, key){
+  if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
+    const text = await pdfText(file);
+    if (text.replace(/\s/g,'').length > 80) return text;
+    return await ocrPdf(file, key);
+  }
+  if (file.type.startsWith('text/')) return await file.text();
+  return await ocrImage(file);
+}
+
+// --- OCR helpers ---
+
+async function getWorker(){
+  if (!worker) {
+    setStatus('Загружаю модуль OCR один раз…', .03);
+    worker = await Tesseract.createWorker(['rus','eng'], 1, {
+      logger:m=>{
+        if (m.status === 'recognizing text')
+          el('status').textContent = 'Распознаю: ' + Math.round(m.progress*100) + '%';
+      }
+    });
+    await worker.setParameters({
+      tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT,
+      preserve_interword_spaces:'1'
+    });
+  }
+  return worker;
+}
+
+async function preprocess(source){
+  const bmp = await createImageBitmap(source);
+  const max = 1350;
+  const scale = Math.min(1, max/Math.max(bmp.width,bmp.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(bmp.width*scale);
+  c.height = Math.round(bmp.height*scale);
+  const x = c.getContext('2d',{alpha:false});
+  x.fillStyle = '#fff';
+  x.fillRect(0,0,c.width,c.height);
+  x.filter = 'grayscale(1) contrast(1.18)';
+  x.drawImage(bmp,0,0,c.width,c.height);
+  bmp.close();
+  return c;
+}
+
+async function ocrImage(file){
+  const w = await getWorker();
+  const canvas = await preprocess(file);
+  const r = await w.recognize(canvas);
+  canvas.width = 1; canvas.height = 1;
+  return r.data.text || '';
+}
+
+async function pdfText(file){
+  const a = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data:a}).promise;
+  let out = '';
+  for (let i=1;i<=Math.min(pdf.numPages,20);i++){
+    const page = await pdf.getPage(i);
+    const tc = await page.getTextContent();
+    out += tc.items.map(x=>x.str).join(' ') + '\n';
+  }
+  return out;
+}
+
+async function ocrPdf(file,key){
+  const a = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data:a}).promise;
+  const w = await getWorker();
+  let out = '';
+  const pages = Math.min(pdf.numPages, key==='autoteka'?6:4);
+  for (let i=1;i<=pages;i++){
+    const page = await pdf.getPage(i);
+    const v = page.getViewport({scale:1.25});
+    const c = document.createElement('canvas');
+    const sc = Math.min(1,1350/Math.max(v.width,v.height));
+    c.width = Math.round(v.width*sc);
+    c.height = Math.round(v.height*sc);
+    await page.render({
+      canvasContext:c.getContext('2d'),
+      viewport:page.getViewport({scale:1.25*sc})
+    }).promise;
+    const r = await w.recognize(c);
+    out += r.data.text + '\n';
+    c.width = 1; c.height = 1;
+  }
+  return out;
+}
+
+// --- Обработка текста ---
+
+function clean(t){
+  return (t||'')
+    .replace(/\u00ad/g,'')
+    .replace(/[|]/g,'I')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function match(t,re){
+  const m = clean(t).match(re);
+  return m ? clean(m[1]||m[0]) : '';
+}
+
+function extractVehicle(t){
+  const s = clean(t), up = s.toUpperCase();
+  const vin = (up.match(/\b[A-HJ-NPR-Z0-9]{17}\b/)||[])[0] || '';
+  const year = match(up,/(?:ГОД ВЫПУСКА|ГОД ИЗГОТОВЛЕНИЯ|ГОД)[^0-9]{0,20}((?:19|20)\d{2})/);
+  const plate = (up.match(/\b[АВЕКМНОРСТУХABEKMHOPCTYX]\s?\d{3}\s?[АВЕКМНОРСТУХABEKMHOPCTYX]{2}\s?\d{2,3}\b/)||[])[0] || '';
+  const color = match(up,/(?:ЦВЕТ КУЗОВА|ЦВЕТ)[^А-ЯA-Z0-9]{0,8}([А-ЯA-Z][А-ЯA-Z\- ]{2,20})/);
+  const body = match(up,/(?:КУЗОВ|BODY)\s*(?:№|N)?\s*[:\-]?\s*([A-HJ-NPR-Z0-9\-]{5,25})/);
+  const chassis = match(up,/(?:ШАССИ|РАМА|CHASSIS)\s*(?:№|N)?\s*[:\-]?\s*([A-HJ-NPR-Z0-9\-]{3,25})/);
+  const ptsNumber = match(up,/(?:ЭЛЕКТРОНН\w* ПАСПОРТ\w*|ЭПТС|ПТС)\s*(?:№|N)?\s*[:\-]?\s*([0-9А-ЯA-Z ]{8,20})/);
+  const stsNumber = match(up,/(?:СВИДЕТЕЛЬСТВ\w* О РЕГИСТРАЦИИ|СТС)\s*(?:ТС)?\s*(?:№|N)?\s*[:\-]?\s*([0-9А-ЯA-Z ]{8,15})/);
+  let makeModel = match(up,/(?:МАРКА[, /И]*МОДЕЛЬ|МАРКА И МОДЕЛЬ|МАРКА)\s*[:\-]?\s*([А-ЯA-Z0-9][А-ЯA-Z0-9 .\-]{2,36})/);
+  makeModel = makeModel.replace(/\s+(VIN|ГОД|ТИП).*$/,'').trim();
+  return {
+    vin,
+    year,
+    plate: plate.replace(/\s/g,''),
+    color,
+    body,
+    chassis,
+    ptsNumber,
+    stsNumber,
+    makeModel
+  };
+}
+
+function extractPerson(t){
+  const s = clean(t), up = s.toUpperCase();
+  const passport = match(up,/(?:ПАСПОРТ|СЕРИЯ)?[^0-9]{0,15}(\d{2}\s?\d{2}\s?\d{6})/);
+  const birth = match(up,/(?:ДАТА РОЖДЕНИЯ|РОДИЛСЯ|РОДИЛАСЬ)[^0-9]{0,15}(\d{2}[.\-/]\d{2}[.\-/]\d{4})/);
+  const issueDate = match(up,/(?:ДАТА ВЫДАЧИ|ВЫДАН)[^0-9]{0,30}(\d{2}[.\-/]\d{2}[.\-/]\d{4})/);
+  const deptCode = match(up,/(?:КОД ПОДРАЗДЕЛЕНИЯ|КОД)[^0-9]{0,12}(\d{3}[\- ]?\d{3})/);
+  const issuedBy = match(up,/(?:ПАСПОРТ ВЫДАН|ВЫДАН)\s*[:\-]?\s*([А-ЯЁ .\-]{8,90}?)(?=\d{2}[.\-/]\d{2}|КОД|$)/);
+  let fio = match(up,/(?:ФАМИЛИЯ)\s*[:\-]?\s*([А-ЯЁ\-]+)\s+(?:ИМЯ)\s*[:\-]?\s*([А-ЯЁ\-]+)\s+(?:ОТЧЕСТВО)\s*[:\-]?\s*([А-ЯЁ\-]+)/);
+  if (!fio){
+    const lines = (t||'').split(/\n/)
+      .map(x=>clean(x).toUpperCase())
+      .filter(x=>/^[А-ЯЁ\- ]{8,60}$/.test(x));
+    fio = lines.find(x=>x.trim().split(/\s+/).length===3) || '';
+  }
+  const address = match(up,/(?:МЕСТО ЖИТЕЛЬСТВА|ЗАРЕГИСТРИРОВАН\w*|АДРЕС)[\s:]*([А-ЯЁ0-9,.\- /]{12,160})/);
+  return {fio,birth,passport,issuedBy,issueDate,deptCode,address};
+}
+
+function norm(k,v){
+  let s = (v||'').toUpperCase().replace(/Ё/g,'Е').replace(/[^А-ЯA-Z0-9]/g,'');
+  if (k==='makeModel') s = s.replace(/АВТОМОБИЛЬ|ЛЕГКОВОЙ/g,'');
+  return s;
+}
+
+function renderReview(){
+  const sources = {
+    sts: mergeVehicle(parsed.sources.stsFront, parsed.sources.stsBack),
+    pts: parsed.sources.pts,
+    autoteka: parsed.sources.autoteka
+  };
+  mismatches = [];
+  const host = el('vehicleChecks');
+  host.innerHTML = '';
+  vehicleFields.forEach(([key,title]) => {
+    const vals = [
+      ['СТС',sources.sts[key]],
+      ['ПТС/ЭПТС',sources.pts[key]],
+      ['Автотека',sources.autoteka[key]]
+    ].filter(x=>x[1]);
+    const uniq = [...new Set(vals.map(x=>norm(key,x[1])).filter(Boolean))];
+    const state = uniq.length>1 ? 'red' : vals.length>=2 ? 'green' : 'yellow';
+    if (state==='red') mismatches.push(key);
+    const preferred = sources.pts[key] || sources.sts[key] || sources.autoteka[key] || '';
+    const row = document.createElement('div');
+    row.className = 'checkrow';
+    row.innerHTML = `
+      <div class="checkhead">
+        <i class="dot ${state}"></i>
+        <span class="checktitle">${title}</span>
+      </div>
+      <div class="sources">
+        ${vals.length
+          ? vals.map(x=>esc(x[0])+': '+esc(x[1])).join('<br>')
+          : 'Не найдено в документах'}
+      </div>
+      <input class="value" data-vfield="${key}" value="${escAttr(preferred)}"
+             placeholder="Проверьте и заполните">
+      <div class="mismatch ${state==='red'?'':'hidden'}">
+        <input type="checkbox" data-confirm="${key}" id="c-${key}">
+        <label for="c-${key}">
+          Подтверждаю выбранное значение после проверки оригиналов
+        </label>
+      </div>`;
+    host.appendChild(row);
+  });
+  el('mismatchInfo').innerHTML = mismatches.length
+    ? '<div class="errorbox">Есть расхождения. Выберите правильные значения и подтвердите каждое красное поле.</div>'
+    : '<div class="okbox">Критических расхождений не найдено. Всё равно проверьте распознанные значения.</div>';
+  renderPeople();
+  renderRisks();
+}
+
+function mergeVehicle(a,b){
+  const r = {};
+  vehicleFields.forEach(([k]) => r[k] = (a[k]||b[k]||''));
+  return r;
+}
+
+function renderPeople(){
+  const h = el('peopleFields');
+  h.innerHTML = '';
+  [['seller','Продавец'],['buyer','Покупатель']].forEach(([who,title]) => {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = '<h3>'+title+'</h3>';
+    peopleSchema.forEach(([k,l]) => {
+      wrap.innerHTML += `
+        <div class="field">
+          <label>${l}</label>
+          <input class="input" data-person="${who}.${k}"
+                 value="${escAttr(parsed.people[who][k]||'')}">
+        </div>`;
+    });
+    h.appendChild(wrap);
+  });
+}
+
+function renderRisks(){
+  const t = (parsed.texts.autoteka||'').toLowerCase();
+  const rules = [
+    ['Ограничения',/ограничен|запрет регистрац/],
+    ['Залог',/залог|реестр залогов/],
+    ['Розыск',/розыск/],
+    ['ДТП',/дтп|авари/],
+    ['Такси',/такси/],
+    ['Каршеринг',/каршеринг/]
+  ];
+  el('riskChecks').innerHTML = rules.map(([n,r]) => `
+    <div class="risk">
+      <b>${n}</b>
+      <div class="sources">${
+        r.test(t)
+          ? 'В отчёте встречается упоминание — откройте отчёт и проверьте контекст.'
+          : 'Явное упоминание не найдено автоматически.'
+      }</div>
+    </div>`).join('');
+}
+
+function collect(){
+  const v = {};
+  document.querySelectorAll('[data-vfield]').forEach(x => {
+    v[x.dataset.vfield] = x.value.trim();
+  });
+  const p = {seller:{},buyer:{}};
+  document.querySelectorAll('[data-person]').forEach(x => {
+    const [a,b] = x.dataset.person.split('.');
+    p[a][b] = x.value.trim();
+  });
+  return {
+    v,
+    p,
+    price: el('price').value,
+    city: el('city').value.trim(),
+    date: formatDate(el('date').value),
+    url: el('autotekaUrl').value.trim()
+  };
+}
+
+function buildContractIfValid(){
+  const unconfirmed = mismatches.filter(k => !document.querySelector(`[data-confirm="${k}"]`)?.checked);
+  const d = collect();
+  const essentials = [];
+  if (norm('vin',d.v.vin).length !== 17) essentials.push('VIN (17 знаков)');
+  if (!d.v.makeModel) essentials.push('марка и модель');
+  if (!d.p.seller.fio) essentials.push('ФИО продавца');
+  if (!d.p.buyer.fio) essentials.push('ФИО покупателя');
+  if (unconfirmed.length || essentials.length){
+    el('mismatchInfo').innerHTML =
+      '<div class="errorbox">' +
+      (unconfirmed.length ? 'Подтвердите красные расхождения. ' : '') +
+      (essentials.length ? 'Проверьте обязательные поля: ' + essentials.join(', ') + '.' : '') +
+      '</div>';
+    el('mismatchInfo').scrollIntoView({behavior:'smooth'});
+    return;
+  }
+  renderContract(d);
+  show(4);
+}
+
+function personText(p){
+  return `${p.fio},
+  ${p.birth ? 'дата рождения '+p.birth+', ' : ''}
+  паспорт ${p.passport||'__________'},
+  выдан ${p.issuedBy||'__________'} ${p.issueDate||''},
+  код подразделения ${p.deptCode||'__________'},
+  зарегистрирован(а): ${p.address||'__________'}`;
+}
+
+function renderContract(d){
+  el('contract').innerHTML = `
+    <h2>ДОГОВОР КУПЛИ-ПРОДАЖИ<br>ТРАНСПОРТНОГО СРЕДСТВА</h2>
+    <p>${esc(d.city)}, ${esc(d.date)}</p>
+    <p>${esc(personText(d.p.seller))}, именуемый(ая) «Продавец», и
+    ${esc(personText(d.p.buyer))}, именуемый(ая) «Покупатель», заключили настоящий договор о нижеследующем.</p>
+
+    <p><b>1. Предмет договора</b></p>
+    <p>1.1. Продавец передаёт в собственность Покупателя, а Покупатель принимает и оплачивает транспортное средство:</p>
+
+    <table>
+      <tr><td>Марка, модель</td><td>${esc(d.v.makeModel)}</td></tr>
+      <tr><td>VIN</td><td>${esc(d.v.vin)}</td></tr>
+      <tr><td>Год выпуска</td><td>${esc(d.v.year)}</td></tr>
+      <tr><td>Государственный номер</td><td>${esc(d.v.plate)}</td></tr>
+      <tr><td>Кузов №</td><td>${esc(d.v.body||'отсутствует')}</td></tr>
+      <tr><td>Шасси №</td><td>${esc(d.v.chassis||'отсутствует')}</td></tr>
+      <tr><td>Цвет</td><td>${esc(d.v.color)}</td></tr>
+      <tr><td>ПТС / ЭПТС</td><td>${esc(d.v.ptsNumber)}</td></tr>
+      <tr><td>СТС</td><td>${esc(d.v.stsNumber)}</td></tr>
+    </table>
+
+    <p><b>2. Цена и расчёты</b></p>
+    <p>2.1. Цена транспортного средства составляет ${esc(d.price)} (${esc(numberWords(d.price))}) рублей.</p>
+    <p>2.2. Расчёт между сторонами произведён полностью до подписания настоящего договора.
+       Продавец подтверждает получение денежных средств и отсутствие финансовых претензий.</p>
+
+    <p><b>3. Заявления сторон</b></p>
+    <p>3.1. Продавец подтверждает, что транспортное средство принадлежит ему на законном основании,
+       не продано, не заложено, не находится под арестом или запретом и свободно от прав третьих лиц,
+       кроме обстоятельств, письменно раскрытых Покупателю.</p>
+    <p>3.2. Покупатель осмотрел транспортное средство, ознакомился с его техническим состоянием
+       и представленными документами${d.url ? ', а также отчётом Автотеки по адресу '+esc(d.url) : ''}.</p>
+
+    <p><b>4. Передача</b></p>
+    <p>4.1. Транспортное средство и документы переданы Покупателю при подписании договора.
+       Настоящий договор одновременно является актом приёма‑передачи.</p>
+    <p>4.2. Право собственности и риск случайной гибели переходят к Покупателю с момента передачи транспортного средства.</p>
+
+    <p><b>5. Заключительные положения</b></p>
+    <p>5.1. Договор составлен в трёх экземплярах, имеющих одинаковую юридическую силу.</p>
+
+    <br>
+    <table>
+      <tr>
+        <td><b>Продавец</b><br><br>${esc(d.p.seller.fio)}<br><br>Подпись: __________________</td>
+        <td><b>Покупатель</b><br><br>${esc(d.p.buyer.fio)}<br><br>Подпись: __________________</td>
+      </tr>
+    </table>`;
+}
+
+function downloadDoc(){
+  const html =
+    '<!doctype html><meta charset=\"utf-8\">' +
+    '<style>body{font-family:\\'Times New Roman\\';font-size:12pt;line-height:1.4;margin:2cm}' +
+    'h2{text-align:center}table{width:100%;border-collapse:collapse}' +
+    'td{padding:8px;border:1px solid #999}</style>' +
+    el('contract').outerHTML;
+  const blob = new Blob(['\ufeff', html], {type:'application/msword'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ДКП-автомобиля.doc';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  setTimeout(()=>{
+    if (confirm('Сохранить также PDF? Откроется печать — выберите «Сохранить как PDF».')){
+      window.print();
+    }
+  },300);
+}
+
+// --- утилиты ---
+
+function formatDate(v){
+  if (!v) return '';
+  const [y,m,d] = v.split('-');
+  return `${d}.${m}.${y}`;
+}
+
+function numberWords(v){
+  const n = Number(String(v).replace(/\D/g,''));
+  if (!Number.isFinite(n)) return '';
+  return n.toLocaleString('ru-RU');
+}
+
+function esc(s){
+  return String(s ?? '').replace(/[&<>\"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'
+  })[c]);
+}
+function escAttr(s){ return esc(s); }
+
+</script>
+</body>
+</html>
