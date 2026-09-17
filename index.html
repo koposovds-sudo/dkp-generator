@@ -1,1127 +1,787 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <title>ДКП‑автомобиля</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- iOS / Apple‑стиль: светлый фон, карточки, SF‑типографика -->
-  <style>
-    :root {
-      --bg: #f5f5f7;
-      --bg-card: #ffffff;
-      --surface: rgba(255,255,255,0.9);
-      --border: #d2d2d7;
-      --text: #1d1d1f;
-      --text-muted: #6e6e73;
-      --accent: #007aff;
-      --accent-soft: #e5f0ff;
-      --danger: #ff3b30;
-      --warn: #ff9f0a;
-      --success: #34c759;
-      --radius-xl: 28px;
-      --radius-lg: 20px;
-      --radius-md: 14px;
-      --shadow-soft: 0 14px 40px rgba(0,0,0,0.12);
-    }
-
-    *, *::before, *::after { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-      background: radial-gradient(circle at top, #ffffff 0, #f5f5f7 45%, #f5f5f7 100%);
-      color: var(--text);
-    }
-
-    .shell {
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 20px 16px 32px;
-    }
-
-    /* Верхняя панель, как в iOS Pages */
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 18px;
-    }
-
-    .top-left,
-    .top-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .sheet-title {
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-
-    .sheet-subtitle {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .round-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      border: none;
-      background: rgba(255,255,255,0.95);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    .round-btn span {
-      font-size: 18px;
-      transform: translateY(-1px);
-    }
-
-    .round-btn-big {
-      min-width: 40px;
-      padding: 0 14px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 600;
-      border: none;
-      background: rgba(255,255,255,0.95);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-      cursor: pointer;
-    }
-
-    .sheet {
-      background: var(--bg-card);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-soft);
-      padding: 22px 18px 24px;
-    }
-
-    @media (min-width: 780px) {
-      .sheet { padding: 26px 26px 28px; }
-    }
-
-    .sheet-header {
-      margin-bottom: 18px;
-    }
-
-    .sheet-header h1 {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      margin: 0 0 4px;
-    }
-
-    .sheet-header p {
-      margin: 0;
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .steps {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      border-radius: 999px;
-      background: #f0f0f3;
-      padding: 4px;
-      margin-bottom: 20px;
-    }
-
-    .step-pill {
-      flex: 1 1 0;
-      min-width: 80px;
-      text-align: center;
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-size: 13px;
-      color: var(--text-muted);
-      cursor: pointer;
-      border: none;
-      background: transparent;
-    }
-
-    .step-pill span {
-      display: block;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 2px;
-    }
-
-    .step-pill[data-active="true"] {
-      background: #ffffff;
-      color: var(--text);
-      font-weight: 600;
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
-    }
-
-    .layout {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    @media (min-width: 900px) {
-      .layout {
-        flex-direction: row;
-        align-items: flex-start;
-      }
-      .layout-main { flex: 3; }
-      .layout-side { flex: 2; }
-    }
-
-    .section {
-      border-radius: var(--radius-lg);
-      border: 1px solid rgba(0,0,0,0.06);
-      padding: 16px 14px 18px;
-      background: var(--surface);
-    }
-
-    @media (min-width: 780px) {
-      .section { padding: 18px 18px 20px; }
-    }
-
-    .section-title {
-      font-size: 15px;
-      font-weight: 600;
-      margin: 0 0 4px;
-    }
-
-    .section-hint {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin: 0 0 10px;
-    }
-
-    .field-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 10px;
-    }
-
-    @media (min-width: 780px) {
-      .field-grid--two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-    }
-
-    .upload-field {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .upload-label-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 6px;
-    }
-
-    .upload-label {
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .upload-tag {
-      font-size: 11px;
-      color: var(--text-muted);
-      border-radius: 999px;
-      border: 1px solid rgba(0,0,0,0.06);
-      padding: 2px 8px;
-    }
-
-    input[type="file"] {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    input[type="file"]::-webkit-file-upload-button {
-      font-size: 13px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: #f5f5f7;
-      color: var(--text);
-      cursor: pointer;
-    }
-
-    .upload-status {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin: 0;
-    }
-
-    .upload-status--ok { color: var(--success); }
-    .upload-status--warn { color: var(--warn); }
-    .upload-status--err { color: var(--danger); }
-
-    .deal-field {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .deal-label {
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .deal-input {
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      padding: 8px 12px;
-      font-size: 14px;
-      background: rgba(255,255,255,0.95);
-    }
-
-    .deal-input:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-soft);
-    }
-
-    .deal-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 10px;
-    }
-
-    @media (min-width: 780px) {
-      .deal-row {
-        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-      }
-    }
-
-    .btn-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .btn {
-      border-radius: 999px;
-      border: none;
-      padding: 10px 16px;
-      font-size: 14px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #ffffff;
-    }
-
-    .btn-secondary {
-      background: #f5f5f7;
-      color: var(--text);
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 5px 9px;
-      font-size: 11px;
-      background: #f5f5f7;
-      color: var(--text-muted);
-      gap: 6px;
-    }
-
-    .pill-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-
-    .pill-dot.car { background: var(--accent); }
-    .pill-dot.passport { background: var(--warn); }
-    .pill-dot.autoteka { background: #af52de; }
-
-    .hint-line {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 10px;
-    }
-
-    .contract-preview {
-      border-radius: var(--radius-lg);
-      border: 1px solid rgba(0,0,0,0.06);
-      padding: 14px 12px;
-      background: #f9f9fb;
-      font-size: 13px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      max-height: 380px;
-      overflow: auto;
-    }
-
-    .preview-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      gap: 6px;
-    }
-
-    .preview-header h2 {
-      font-size: 15px;
-      margin: 0;
-    }
-
-    .preview-header span {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .checklist {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .checklist li {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-
-    .checklist-icon {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-top: 3px;
-      flex-shrink: 0;
-    }
-
-    .checklist-icon.ok { background: var(--success); }
-    .checklist-icon.warn { background: var(--warn); }
-    .checklist-icon.err { background: var(--danger); }
-  </style>
-
-  <!-- Tesseract.js: клиентский OCR с поддержкой русского языка [web:307][web:302] -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ДКП — генератор договора купли-продажи авто</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{
+  --bg:#f2f2f7; --card:#ffffff; --card-2:#f7f7fa; --border:rgba(60,60,67,0.13);
+  --text:#1c1c1e; --text-muted:#6e6e73; --text-faint:#9a9aa0;
+  --blue:#007aff; --green:#34c759; --orange:#ff9500; --red:#ff3b30;
+  --radius-sm:10px; --radius-md:14px; --radius-lg:20px;
+  --shadow:0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#000000; --card:#1c1c1e; --card-2:#242426; --border:rgba(255,255,255,0.12);
+  --text:#f5f5f7; --text-muted:#98989d; --text-faint:#636366; }
+}
+[data-theme="dark"]{ --bg:#000000; --card:#1c1c1e; --card-2:#242426; --border:rgba(255,255,255,0.12);
+  --text:#f5f5f7; --text-muted:#98989d; --text-faint:#636366; }
+[data-theme="light"]{ --bg:#f2f2f7; --card:#ffffff; --card-2:#f7f7fa; --border:rgba(60,60,67,0.13);
+  --text:#1c1c1e; --text-muted:#6e6e73; --text-faint:#9a9aa0; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  background:var(--bg); color:var(--text); min-height:100dvh; line-height:1.45;
+  padding-bottom:calc(96px + env(safe-area-inset-bottom));
+}
+header{
+  position:sticky; top:0; z-index:20; backdrop-filter:blur(20px) saturate(180%);
+  background:color-mix(in oklab, var(--bg) 72%, transparent);
+  border-bottom:1px solid var(--border);
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:17px;}
+.brand svg{width:24px;height:24px;color:var(--blue);}
+.theme-btn{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--card-2);color:var(--text);}
+main{max-width:600px;margin:0 auto;padding:16px;}
+.hero{padding:20px 4px 8px;}
+.hero .eyebrow{color:var(--blue);font-size:13px;font-weight:600;margin-bottom:6px;}
+.hero h1{font-size:26px;font-weight:700;letter-spacing:-0.02em;margin-bottom:8px;}
+.hero p{color:var(--text-muted);font-size:15px;max-width:36ch;}
+.tabs{display:flex;gap:6px;background:var(--card-2);padding:4px;border-radius:12px;margin:16px 0;overflow-x:auto;}
+.tab{flex:1;text-align:center;padding:8px 6px;border-radius:9px;font-size:13px;font-weight:600;color:var(--text-muted);white-space:nowrap;}
+.tab.active{background:var(--card);color:var(--text);box-shadow:var(--shadow);}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin-bottom:14px;box-shadow:var(--shadow);}
+.card h2{font-size:17px;font-weight:600;margin-bottom:4px;}
+.card .sub{color:var(--text-muted);font-size:13px;margin-bottom:14px;}
+.section-title{font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.02em;margin:18px 4px 8px;}
+.drop{
+  border:1.5px dashed var(--border); border-radius:var(--radius-md); padding:16px;
+  display:flex; align-items:center; gap:12px; background:var(--card-2); position:relative;
+  transition:border-color .15s, background .15s;
+}
+.drop.dragover{border-color:var(--blue); background:color-mix(in oklab, var(--blue) 6%, var(--card-2));}
+.drop .ic{width:38px;height:38px;border-radius:10px;background:var(--card);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text-faint);}
+.drop.filled .ic{color:var(--green);}
+.drop .info{flex:1;min-width:0;}
+.drop .info .t{font-size:14px;font-weight:600;}
+.drop .info .d{font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.drop .status{font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;flex-shrink:0;}
+.status-ok{background:color-mix(in oklab, var(--green) 15%, transparent);color:var(--green);}
+.status-wait{background:color-mix(in oklab, var(--text-faint) 15%, transparent);color:var(--text-muted);}
+.status-err{background:color-mix(in oklab, var(--red) 15%, transparent);color:var(--red);}
+.upload-grid{display:flex;flex-direction:column;gap:10px;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:6px;}
+.field input, .field textarea{
+  width:100%;padding:12px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--card-2);color:var(--text);font-size:15px;font-family:inherit;
+}
+.field input:focus, .field textarea:focus{outline:none;border-color:var(--blue);}
+.field.conflict input{border-color:var(--red);background:color-mix(in oklab, var(--red) 6%, var(--card-2));}
+.field.warn input{border-color:var(--orange);}
+.field.ok input{border-color:var(--green);}
+.hint{font-size:12px;margin-top:5px;}
+.hint.err{color:var(--red);}
+.hint.warn{color:var(--orange);}
+.hint.ok{color:var(--green);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:15px;border-radius:var(--radius-md);font-size:16px;font-weight:600;
+  background:var(--blue);color:#fff;border:none;
+}
+.btn:active{opacity:0.75;}
+.btn.secondary{background:var(--card-2);color:var(--text);}
+.btn:disabled{opacity:0.4;}
+.bar-wrap{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  background:color-mix(in oklab, var(--bg) 80%, transparent); backdrop-filter:blur(20px);
+  border-top:1px solid var(--border); display:flex; gap:10px; max-width:600px; margin:0 auto;}
+.progress{height:6px;border-radius:99px;background:var(--card-2);overflow:hidden;margin:10px 0;}
+.progress > div{height:100%;background:var(--blue);border-radius:99px;transition:width .25s;}
+.doc-log{font-size:12px;color:var(--text-muted);margin-top:6px;}
+.summary-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.summary-item:last-child{border-bottom:none;}
+.summary-dot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.dot-ok{background:var(--green);} .dot-warn{background:var(--orange);} .dot-err{background:var(--red);}
+.summary-text .k{font-size:13px;font-weight:600;}
+.summary-text .v{font-size:13px;color:var(--text-muted);margin-top:2px;}
+.badge-count{font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;}
+.contract-preview{background:var(--card-2);border-radius:var(--radius-md);padding:16px;font-size:13px;line-height:1.7;white-space:pre-wrap;max-height:400px;overflow-y:auto;border:1px solid var(--border);}
+.empty{text-align:center;padding:40px 20px;color:var(--text-muted);}
+.toast{position:fixed;bottom:100px;left:16px;right:16px;max-width:568px;margin:0 auto;background:var(--text);color:var(--bg);padding:12px 16px;border-radius:var(--radius-md);font-size:13px;font-weight:500;z-index:50;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);transition:.2s;}
+.toast.show{opacity:1;transform:translateY(0);}
+.spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.legal-note{font-size:12px;color:var(--text-faint);margin-top:10px;line-height:1.5;}
+.page{display:none;} .page.active{display:block;animation:fade .2s;}
+@keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+</style>
 </head>
 <body>
-  <div class="shell">
-    <div class="top-bar">
-      <div class="top-left">
-        <button class="round-btn" type="button" aria-label="Меню">
-          <span>≡</span>
-        </button>
-        <div>
-          <div class="sheet-title">ДКП‑автомобиля</div>
-          <div class="sheet-subtitle">Черновик договора, как в авто.ру, но под ваши данные</div>
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17V8.5L8 5h8l4 3.5V17"/><path d="M4 17h16v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2Z"/><circle cx="7.5" cy="17" r="1.4"/><circle cx="16.5" cy="17" r="1.4"/></svg>
+    ДКП
+  </div>
+  <button class="theme-btn" id="themeToggle" aria-label="Переключить тему">🌙</button>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="eyebrow">Договор за несколько минут</div>
+    <h1>Документы на вход. Готовый ДКП на выходе.</h1>
+    <p>Загрузите фото и PDF — распознаем данные и сверим их между собой прямо на вашем устройстве.</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-step="1">1. Загрузка</div>
+    <div class="tab" data-step="2">2. Распознавание</div>
+    <div class="tab" data-step="3">3. Проверка</div>
+    <div class="tab" data-step="4">4. Договор</div>
+  </div>
+
+  <!-- STEP 1: UPLOAD -->
+  <section class="page active" id="page-1">
+    <div class="card">
+      <h2>Автотека</h2>
+      <div class="sub">PDF-отчёт или ссылка на публичный отчёт</div>
+      <div class="upload-grid">
+        <label class="drop" id="drop-autoteka">
+          <div class="ic">📄</div>
+          <div class="info"><div class="t">Отчёт Автотеки (PDF)</div><div class="d" id="name-autoteka">Не выбран</div></div>
+          <div class="status status-wait" id="status-autoteka">Ждём</div>
+          <input type="file" accept="application/pdf" data-slot="autoteka">
+        </label>
+        <div class="field" style="margin:0;">
+          <input type="url" id="autotekaLink" placeholder="Ссылка на отчёт (необязательно)">
         </div>
-      </div>
-      <div class="top-right">
-        <button class="round-btn-big" type="button" aria-label="Справка" onclick="alert('Шаги: 1) загрузите документы, 2) распознайте и проверьте, 3) сформируйте договор и выгрузите DOC/PDF.')">
-          …
-        </button>
       </div>
     </div>
 
-    <main class="sheet">
-      <header class="sheet-header">
-        <h1>Документы на вход. Готовый ДКП на выход.</h1>
-        <p>Распознаём СТС, ПТС/ЭПТС, паспорта и отчёт Автотеки прямо на устройстве, без отправки файлов на сервер.</p>
-      </header>
-
-      <div class="steps">
-        <button class="step-pill" type="button" data-step="1" data-active="true">
-          <span>Шаг 1</span>
-          Загрузка документов
-        </button>
-        <button class="step-pill" type="button" data-step="2">
-          <span>Шаг 2</span>
-          Распознавание и проверка
-        </button>
-        <button class="step-pill" type="button" data-step="3">
-          <span>Шаг 3</span>
-          Договор и выгрузка
-        </button>
+    <div class="card">
+      <h2>СТС</h2>
+      <div class="sub">Обе стороны — отдельными фото</div>
+      <div class="upload-grid">
+        <label class="drop" id="drop-sts_front">
+          <div class="ic">🪪</div>
+          <div class="info"><div class="t">СТС — лицевая сторона</div><div class="d" id="name-sts_front">Не выбрана</div></div>
+          <div class="status status-wait" id="status-sts_front">Ждём</div>
+          <input type="file" accept="image/*" capture="environment" data-slot="sts_front">
+        </label>
+        <label class="drop" id="drop-sts_back">
+          <div class="ic">🪪</div>
+          <div class="info"><div class="t">СТС — оборотная сторона</div><div class="d" id="name-sts_back">Не выбрана</div></div>
+          <div class="status status-wait" id="status-sts_back">Ждём</div>
+          <input type="file" accept="image/*" capture="environment" data-slot="sts_back">
+        </label>
       </div>
+    </div>
 
-      <div class="layout">
-        <div class="layout-main">
-          <!-- STEP 1: загрузка -->
-          <section class="section" data-step-panel="1">
-            <h3 class="section-title">Документы автомобиля</h3>
-            <p class="section-hint">
-              Загрузите СТС с обеих сторон, ПТС или выписку ЭПТС и отчёт Автотеки. Для многостраничных файлов можно выбрать сразу несколько страниц.
-            </p>
-
-            <div class="field-grid field-grid--two">
-              <div class="upload-field">
-                <div class="upload-label-row">
-                  <span class="upload-label">СТС — лицевая сторона</span>
-                  <span class="upload-tag">Фото / PDF</span>
-                </div>
-                <input id="sts-front" name="stsFront" type="file" accept="image/*,application/pdf">
-                <p class="upload-status" data-status-for="stsFront">Файл не выбран</p>
-              </div>
-
-              <div class="upload-field">
-                <div class="upload-label-row">
-                  <span class="upload-label">СТС — оборотная сторона</span>
-                  <span class="upload-tag">Фото / PDF</span>
-                </div>
-                <input id="sts-back" name="stsBack" type="file" accept="image/*,application/pdf">
-                <p class="upload-status" data-status-for="stsBack">Файл не выбран</p>
-              </div>
-            </div>
-
-            <div class="field-grid" style="margin-top: 12px;">
-              <div class="upload-field">
-                <div class="upload-label-row">
-                  <span class="upload-label">ПТС (бумажный) или выписка ЭПТС</span>
-                  <span class="upload-tag">Можно несколько страниц</span>
-                </div>
-                <input id="pts-epts" name="ptsEpts" type="file" multiple accept="image/*,application/pdf">
-                <p class="upload-status" data-status-for="ptsEpts">Файлы не выбраны</p>
-              </div>
-            </div>
-
-            <h3 class="section-title" style="margin-top: 16px;">Отчёт Автотеки</h3>
-            <p class="section-hint">
-              Добавьте ссылку и, по возможности, PDF‑отчёт. Мы ориентируемся на структуру, как в онлайн‑форме авто.ру: VIN, госномер и проверки ограничений [web:296][web:298].
-            </p>
-
-            <div class="field-grid">
-              <div class="deal-field">
-                abel class="deal-label" for="autoteka-link">Ссылка на отчёт Автотеки</label>
-                <input id="autoteka-link" class="deal-input" type="url" placeholder="https://autoteka.ru/...">
-              </div>
-
-              <div class="upload-field">
-                <div class="upload-label-row">
-                  <span class="upload-label">PDF‑отчёт Автотеки (необязательно)</span>
-                  <span class="upload-tag">PDF</span>
-                </div>
-                <input id="autoteka-file" name="autotekaFile" type="file" accept="application/pdf">
-                <p class="upload-status" data-status-for="autotekaFile">Файл не выбран</p>
-              </div>
-            </div>
-
-            <h3 class="section-title" style="margin-top: 16px;">Паспорта сторон</h3>
-            <p class="section-hint">
-              Для каждого паспорта загрузите разворот с фото и страницу регистрации. OCR извлечёт ФИО, серию, номер, кем и когда выдан, адрес.
-            </p>
-
-            <div class="field-grid field-grid--two">
-              <div class="upload-field">
-                <div class="upload-label-row">
-                  <span class="upload-label">Паспорт продавца — разворот</span>
-                  <span class="upload-tag">Фото / PDF</span>
-                </div>
-                <input id="seller-passport-main" name="sellerPassportMain" type="file" accept="image/*,application/pdf">
-                <p class="upload-status" data-status-for="sellerPassportMain">Файл не выбран</p>
-              </div>
-
-              <div class="upload-field">
-                <div class="upload-label-row">
-                  <span class="upload-label">Паспорт продавца — регистрация</span>
-                  <span class="upload-tag">Фото / PDF</span>
-                </div>
-                <input id="seller-passport-reg" name="sellerPassportReg" type="file" accept="image/*,application/pdf">
-                <p class="upload-status" data-status-for="sellerPassportReg">Файл не выбран</p>
-              </div>
-            </div>
-
-            <div class="field-grid field-grid--two" style="margin-top: 12px;">
-              <div class="upload-field">
-                <div class="upload-label-row">
-                  <span class="upload-label">Паспорт покупателя — разворот</span>
-                  <span class="upload-tag">Фото / PDF</span>
-                </div>
-                <input id="buyer-passport-main" name="buyerPassportMain" type="file" accept="image/*,application/pdf">
-                <p class="upload-status" data-status-for="buyerPassportMain">Файл не выбран</p>
-              </div>
-
-              <div class="upload-field">
-                <div class="upload-label-row">
-                  <span class="upload-label">Паспорт покупателя — регистрация</span>
-                  <span class="upload-tag">Фото / PDF</span>
-                </div>
-                <input id="buyer-passport-reg" name="buyerPassportReg" type="file" accept="image/*,application/pdf">
-                <p class="upload-status" data-status-for="buyerPassportReg">Файл не выбран</p>
-              </div>
-            </div>
-
-            <div class="btn-row">
-              <button type="button" class="btn btn-primary" id="go-ocr">
-                Распознать документы →
-              </button>
-            </div>
-
-            <p class="hint-line">
-              <span class="pill">
-                <span class="pill-dot car"></span> СТС / ПТС / ЭПТС — идентификация авто
-              </span>
-              &nbsp;
-              <span class="pill">
-                <span class="pill-dot passport"></span> Паспортные данные продавца и покупателя
-              </span>
-              &nbsp;
-              <span class="pill">
-                <span class="pill-dot autoteka"></span> Автотека — проверка истории
-              </span>
-            </p>
-          </section>
-
-          <!-- STEP 2: распознавание и проверка -->
-          <section class="section" data-step-panel="2" hidden>
-            <h3 class="section-title">Результаты распознавания</h3>
-            <p class="section-hint">
-              Ниже — авто‑заполненные поля из документов. Проверьте и поправьте руками, если OCR ошибся. Договор не сформируется, пока обязательные поля не заполнены корректно.
-            </p>
-
-            <div class="deal-row">
-              <div class="deal-field">
-                abel class="deal-label" for="vin">VIN (17 символов)</label>
-                <input id="vin" class="deal-input" type="text" maxlength="17" placeholder="XXXXXXXXXXXXXXXX">
-              </div>
-              <div class="deal-field">
-                abel class="deal-label" for="plate">Госномер</label>
-                <input id="plate" class="deal-input" type="text" placeholder="А123ВС123">
-              </div>
-            </div>
-
-            <div class="deal-row" style="margin-top: 10px;">
-              <div class="deal-field">
-                abel class="deal-label" for="make-model">Марка и модель</label>
-                <input id="make-model" class="deal-input" type="text" placeholder="BMW 3‑series, LADA Granta и т.п.">
-              </div>
-              <div class="deal-field">
-                abel class="deal-label" for="year">Год выпуска</label>
-                <input id="year" class="deal-input" type="number" min="1950" max="2100" placeholder="2020">
-              </div>
-            </div>
-
-            <div class="deal-row" style="margin-top: 10px;">
-              <div class="deal-field">
-                abel class="deal-label" for="seller-name">Продавец — ФИО</label>
-                <input id="seller-name" class="deal-input" type="text">
-              </div>
-              <div class="deal-field">
-                abel class="deal-label" for="seller-passport">Продавец — паспорт (серия, номер, кем, когда выдан)</label>
-                <input id="seller-passport" class="deal-input" type="text">
-              </div>
-            </div>
-
-            <div class="deal-row" style="margin-top: 10px;">
-              <div class="deal-field">
-                abel class="deal-label" for="seller-address">Продавец — адрес регистрации</label>
-                <input id="seller-address" class="deal-input" type="text">
-              </div>
-              <div class="deal-field">
-                abel class="deal-label" for="buyer-name">Покупатель — ФИО</label>
-                <input id="buyer-name" class="deal-input" type="text">
-              </div>
-            </div>
-
-            <div class="deal-row" style="margin-top: 10px;">
-              <div class="deal-field">
-                abel class="deal-label" for="buyer-passport">Покупатель — паспорт (серия, номер, кем, когда выдан)</label>
-                <input id="buyer-passport" class="deal-input" type="text">
-              </div>
-              <div class="deal-field">
-                abel class="deal-label" for="buyer-address">Покупатель — адрес регистрации</label>
-                <input id="buyer-address" class="deal-input" type="text">
-              </div>
-            </div>
-
-            <div class="deal-row" style="margin-top: 10px;">
-              <div class="deal-field">
-                abel class="deal-label" for="deal-price">Цена, ₽</label>
-                <input id="deal-price" class="deal-input" type="number" inputmode="decimal" placeholder="Например, 500000">
-              </div>
-              <div class="deal-field">
-                abel class="deal-label" for="deal-date">Дата договора</label>
-                <input id="deal-date" class="deal-input" type="date">
-              </div>
-            </div>
-
-            <div class="deal-row" style="margin-top: 10px;">
-              <div class="deal-field">
-                abel class="deal-label" for="deal-place">Место (город)</label>
-                <input id="deal-place" class="deal-input" type="text" placeholder="Санкт‑Петербург, Москва и т.п.">
-              </div>
-              <div class="deal-field">
-                abel class="deal-label" for="deal-number">Номер договора (необязательно)</label>
-                <input id="deal-number" class="deal-input" type="text">
-              </div>
-            </div>
-
-            <div class="btn-row">
-              <button type="button" class="btn btn-secondary" id="back-to-1">← Назад к документам</button>
-              <button type="button" class="btn btn-primary" id="go-contract">
-                Проверено, перейти к договору →
-              </button>
-            </div>
-          </section>
-
-          <!-- STEP 3: договор -->
-          <section class="section" data-step-panel="3" hidden>
-            <h3 class="section-title">Предпросмотр договора</h3>
-            <p class="section-hint">
-              Шаблон структурно как у типовых ДКП авто: предмет, цена, заявления, прочие условия, подписи [web:300][web:304], но текст написан по‑новому, чтобы не копировать чужие бланки.
-            </p>
-
-            <div class="contract-preview" id="contract-preview">
-              <div class="preview-header">
-                <h2>Договор ещё не сформирован</h2>
-                <span>Заполните поля и нажмите «Сформировать и скачать».</span>
-              </div>
-              <p>Здесь появится текст договора купли‑продажи транспортного средства на основании введённых и распознанных данных.</p>
-            </div>
-
-            <div class="btn-row">
-              <button type="button" class="btn btn-secondary" id="back-to-2">← Назад к данным</button>
-              <button type="button" class="btn btn-primary" id="generate-contract">
-                Сформировать и скачать DOC
-              </button>
-            </div>
-          </section>
-        </div>
-
-        <!-- Боковая панель: контроль комплекта и валидации -->
-        <aside class="layout-side">
-          <section class="section">
-            <h3 class="section-title">Комплектность и проверки</h3>
-            <p class="section-hint">
-              Ниже — обязательные элементы. Договор не сформируется, пока красные пункты не станут зелёными.
-            </p>
-
-            <ul class="checklist" id="checklist">
-              ><span class="checklist-icon" data-check="sts"></span><span>СТС: обе стороны загружены</span></li>
-              ><span class="checklist-icon" data-check="pts"></span><span>ПТС/ЭПТС: есть хотя бы один файл</span></li>
-              ><span class="checklist-icon" data-check="seller"></span><span>Паспорт продавца: разворот и регистрация</span></li>
-              ><span class="checklist-icon" data-check="buyer"></span><span>Паспорт покупателя: разворот и регистрация</span></li>
-              ><span class="checklist-icon" data-check="vin"></span><span>VIN 17 символов, совпадает между документами</span></li>
-              ><span class="checklist-icon" data-check="price"></span><span>Цена, дата и место сделки указаны</span></li>
-            </ul>
-
-            <p class="hint-line">
-              Зелёный — всё ок; жёлтый — есть нюансы, лучше проверить; красный — критично, договор не будет сформирован.
-            </p>
-          </section>
-        </aside>
+    <div class="card">
+      <h2>ПТС / ЭПТС</h2>
+      <div class="sub">Фото бумажного ПТС или PDF-выписка электронного ПТС</div>
+      <div class="upload-grid">
+        <label class="drop" id="drop-pts">
+          <div class="ic">📘</div>
+          <div class="info"><div class="t">ПТС / выписка ЭПТС</div><div class="d" id="name-pts">Не выбран</div></div>
+          <div class="status status-wait" id="status-pts">Ждём</div>
+          <input type="file" accept="image/*,application/pdf" data-slot="pts">
+        </label>
       </div>
-    </main>
-  </div>
+    </div>
 
-  <script>
-    // --- переключение шагов ---
-    const stepPills = document.querySelectorAll('.step-pill');
-    const stepPanels = document.querySelectorAll('[data-step-panel]');
-    let currentStep = 1;
+    <div class="card">
+      <h2>Паспорт продавца</h2>
+      <div class="upload-grid">
+        <label class="drop" id="drop-seller_main">
+          <div class="ic">🛂</div>
+          <div class="info"><div class="t">Разворот с фото</div><div class="d" id="name-seller_main">Не выбран</div></div>
+          <div class="status status-wait" id="status-seller_main">Ждём</div>
+          <input type="file" accept="image/*" capture="environment" data-slot="seller_main">
+        </label>
+        <label class="drop" id="drop-seller_reg">
+          <div class="ic">🛂</div>
+          <div class="info"><div class="t">Страница регистрации</div><div class="d" id="name-seller_reg">Не выбрана</div></div>
+          <div class="status status-wait" id="status-seller_reg">Ждём</div>
+          <input type="file" accept="image/*" capture="environment" data-slot="seller_reg">
+        </label>
+      </div>
+    </div>
 
-    function setStep(step) {
-      currentStep = step;
-      stepPills.forEach(p => p.dataset.active = String(Number(p.dataset.step) === step));
-      stepPanels.forEach(panel => panel.hidden = Number(panel.dataset.stepPanel) !== step);
-    }
+    <div class="card">
+      <h2>Паспорт покупателя</h2>
+      <div class="upload-grid">
+        <label class="drop" id="drop-buyer_main">
+          <div class="ic">🛂</div>
+          <div class="info"><div class="t">Разворот с фото</div><div class="d" id="name-buyer_main">Не выбран</div></div>
+          <div class="status status-wait" id="status-buyer_main">Ждём</div>
+          <input type="file" accept="image/*" capture="environment" data-slot="buyer_main">
+        </label>
+        <label class="drop" id="drop-buyer_reg">
+          <div class="ic">🛂</div>
+          <div class="info"><div class="t">Страница регистрации</div><div class="d" id="name-buyer_reg">Не выбрана</div></div>
+          <div class="status status-wait" id="status-buyer_reg">Ждём</div>
+          <input type="file" accept="image/*" capture="environment" data-slot="buyer_reg">
+        </label>
+      </div>
+    </div>
 
-    stepPills.forEach(pill => {
-      pill.addEventListener('click', () => setStep(Number(pill.dataset.step)));
-    });
+    <div class="card">
+      <h2>Условия сделки</h2>
+      <div class="field"><label>Цена (руб.)</label><input type="number" id="price" placeholder="850000"></div>
+      <div class="row2">
+        <div class="field"><label>Дата договора</label><input type="date" id="dealDate"></div>
+        <div class="field"><label>Место заключения</label><input type="text" id="dealPlace" placeholder="г. Москва"></div>
+      </div>
+    </div>
+  </section>
 
-    document.getElementById('back-to-1').addEventListener('click', () => setStep(1));
-    document.getElementById('back-to-2').addEventListener('click', () => setStep(2));
+  <!-- STEP 2: OCR PROGRESS -->
+  <section class="page" id="page-2">
+    <div class="card">
+      <h2>Распознаю документы</h2>
+      <div class="sub" id="ocrCurrentLabel">Готовимся…</div>
+      <div class="progress"><div id="ocrBar" style="width:0%"></div></div>
+      <div class="doc-log" id="ocrLog">Модель загрузится один раз и закэшируется в браузере.</div>
+    </div>
+    <div class="legal-note">Обработка идёт локально в браузере телефона. Файлы не отправляются на сервер.</div>
+  </section>
 
-    // --- статусы загрузки и чеклист ---
-    const uploadInputs = document.querySelectorAll('input[type="file"]');
-    const checklistIcons = {
-      sts: document.querySelector('[data-check="sts"]'),
-      pts: document.querySelector('[data-check="pts"]'),
-      seller: document.querySelector('[data-check="seller"]'),
-      buyer: document.querySelector('[data-check="buyer"]'),
-      vin: document.querySelector('[data-check="vin"]'),
-      price: document.querySelector('[data-check="price"]')
+  <!-- STEP 3: REVIEW -->
+  <section class="page" id="page-3">
+    <div class="card" id="conflictCard">
+      <h2>Сверка данных</h2>
+      <div class="sub">СТС ↔ ПТС/ЭПТС ↔ Автотека</div>
+      <div id="conflictList"></div>
+    </div>
+
+    <div class="section-title">Транспортное средство</div>
+    <div class="card">
+      <div class="field" data-f="vin"><label>VIN</label><input id="f_vin" maxlength="17"><div class="hint" id="h_vin"></div></div>
+      <div class="row2">
+        <div class="field" data-f="brand"><label>Марка</label><input id="f_brand"></div>
+        <div class="field" data-f="model"><label>Модель</label><input id="f_model"></div>
+      </div>
+      <div class="row2">
+        <div class="field" data-f="year"><label>Год выпуска</label><input id="f_year"></div>
+        <div class="field" data-f="plate"><label>Госномер</label><input id="f_plate"></div>
+      </div>
+      <div class="row2">
+        <div class="field" data-f="color"><label>Цвет</label><input id="f_color"></div>
+        <div class="field" data-f="engine"><label>Двигатель №</label><input id="f_engine"></div>
+      </div>
+      <div class="row2">
+        <div class="field" data-f="body"><label>Кузов №</label><input id="f_body"></div>
+        <div class="field" data-f="chassis"><label>Шасси (рама) №</label><input id="f_chassis"></div>
+      </div>
+      <div class="row2">
+        <div class="field" data-f="ptsNo"><label>Серия и № ПТС/ЭПТС</label><input id="f_ptsNo"></div>
+        <div class="field" data-f="ptsDate"><label>Дата выдачи ПТС</label><input id="f_ptsDate"></div>
+      </div>
+      <div class="row2">
+        <div class="field" data-f="stsNo"><label>Серия и № СТС</label><input id="f_stsNo"></div>
+        <div class="field" data-f="stsDate"><label>Дата выдачи СТС</label><input id="f_stsDate"></div>
+      </div>
+    </div>
+
+    <div class="section-title">Автотека — риски</div>
+    <div class="card" id="autotekaRisksCard">
+      <div id="autotekaRisks" class="sub">Нет данных из отчёта.</div>
+    </div>
+
+    <div class="section-title">Продавец</div>
+    <div class="card">
+      <div class="field"><label>ФИО</label><input id="s_fio"></div>
+      <div class="row2">
+        <div class="field"><label>Дата рождения</label><input id="s_dob"></div>
+        <div class="field"><label>Серия и номер паспорта</label><input id="s_passport"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Код подразделения</label><input id="s_unit"></div>
+        <div class="field"><label>Кем выдан</label><input id="s_issuer"></div>
+      </div>
+      <div class="field"><label>Дата выдачи</label><input id="s_issueDate"></div>
+      <div class="field"><label>Адрес регистрации</label><input id="s_address"></div>
+    </div>
+
+    <div class="section-title">Покупатель</div>
+    <div class="card">
+      <div class="field"><label>ФИО</label><input id="b_fio"></div>
+      <div class="row2">
+        <div class="field"><label>Дата рождения</label><input id="b_dob"></div>
+        <div class="field"><label>Серия и номер паспорта</label><input id="b_passport"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Код подразделения</label><input id="b_unit"></div>
+        <div class="field"><label>Кем выдан</label><input id="b_issuer"></div>
+      </div>
+      <div class="field"><label>Дата выдачи</label><input id="b_issueDate"></div>
+      <div class="field"><label>Адрес регистрации</label><input id="b_address"></div>
+    </div>
+  </section>
+
+  <!-- STEP 4: CONTRACT -->
+  <section class="page" id="page-4">
+    <div class="card">
+      <h2>Договор готов</h2>
+      <div class="sub">Проверьте текст перед печатью/сохранением</div>
+      <div class="contract-preview" id="contractText"></div>
+    </div>
+  </section>
+</main>
+
+<div class="bar-wrap">
+  <button class="btn secondary" id="btnBack" style="display:none;">← Назад</button>
+  <button class="btn" id="btnNext">Распознать и продолжить →</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const t = document.getElementById('themeToggle');
+  const root = document.documentElement;
+  let mode = matchMedia('(prefers-color-scheme:dark)').matches ? 'dark':'light';
+  root.setAttribute('data-theme', mode);
+  t.textContent = mode==='dark' ? '☀️' : '🌙';
+  t.addEventListener('click', ()=>{
+    mode = mode==='dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', mode);
+    t.textContent = mode==='dark' ? '☀️' : '🌙';
+  });
+})();
+
+function toast(msg, ms=2600){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove('show'), ms);
+}
+
+const SLOTS = ['autoteka','sts_front','sts_back','pts','seller_main','seller_reg','buyer_main','buyer_reg'];
+const files = {};
+const MAX_DIM = 1600;
+const MAX_BYTES = 8*1024*1024;
+
+async function downscaleImage(file){
+  if(file.type === 'application/pdf') return file;
+  return new Promise((resolve)=>{
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = ()=>{
+      let {width,height} = img;
+      const scale = Math.min(1, MAX_DIM/Math.max(width,height));
+      const w = Math.round(width*scale), h = Math.round(height*scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      canvas.toBlob((blob)=>{
+        resolve(new File([blob], file.name, {type:'image/jpeg'}));
+      }, 'image/jpeg', 0.85);
     };
+    img.onerror = ()=>resolve(file);
+    img.src = url;
+  });
+}
 
-    function setChecklistIcon(key, state) {
-      const icon = checklistIcons[key];
-      if (!icon) return;
-      icon.classList.remove('ok', 'warn', 'err');
-      if (state === 'ok') icon.classList.add('ok');
-      else if (state === 'warn') icon.classList.add('warn');
-      else icon.classList.add('err');
+SLOTS.forEach(slot=>{
+  const drop = document.getElementById('drop-'+slot);
+  const input = drop.querySelector('input');
+  const nameEl = document.getElementById('name-'+slot);
+  const statusEl = document.getElementById('status-'+slot);
+  input.addEventListener('change', async (e)=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    if(f.size > MAX_BYTES){
+      toast('Файл больше 8 МБ — сожмите фото и попробуйте снова.');
+      return;
     }
+    statusEl.textContent = 'Готовим'; statusEl.className='status status-wait';
+    const processed = await downscaleImage(f);
+    files[slot] = processed;
+    nameEl.textContent = f.name;
+    drop.classList.add('filled');
+    statusEl.textContent = 'Загружен'; statusEl.className='status status-ok';
+  });
+});
 
-    function updateUploadStatus(input) {
-      const status = document.querySelector(`.upload-status[data-status-for="${input.name}"]`);
-      if (!status) return;
+const steps = ['page-1','page-2','page-3','page-4'];
+let currentStep = 0;
+function showStep(i){
+  steps.forEach((id,idx)=>document.getElementById(id).classList.toggle('active', idx===i));
+  document.querySelectorAll('.tab').forEach((tab,idx)=>tab.classList.toggle('active', idx===i));
+  document.getElementById('btnBack').style.display = i===0 ? 'none':'flex';
+  const nextBtn = document.getElementById('btnNext');
+  nextBtn.textContent = i===0 ? 'Распознать и продолжить →' : i===1 ? 'Подождите…' : i===2 ? 'Сформировать договор →' : 'Скачать / напечатать';
+  nextBtn.disabled = (i===1);
+  currentStep = i;
+}
+document.getElementById('btnBack').addEventListener('click', ()=>{
+  if(currentStep>0) showStep(currentStep-1);
+});
 
-      if (input.files && input.files.length) {
-        const names = Array.from(input.files).map(f => f.name).join(', ');
-        status.textContent = `Загружено: ${names}`;
-        status.classList.remove('upload-status--err');
-        status.classList.add('upload-status--ok');
+document.querySelectorAll('.tab').forEach((tab,idx)=>{
+  tab.addEventListener('click', ()=>{ if(idx <= currentStep) showStep(idx); });
+});
+
+let ocrWorker = null;
+async function getWorker(){
+  if(ocrWorker) return ocrWorker;
+  ocrWorker = await Tesseract.createWorker('rus+eng', 1, {
+    logger: ()=>{}
+  });
+  return ocrWorker;
+}
+
+async function ocrImageFile(file, label, onProgress){
+  const worker = await getWorker();
+  const { data } = await worker.recognize(file, {}, { text:true });
+  return data.text || '';
+}
+
+async function pdfToText(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  let text = '';
+  for(let i=1;i<=pdf.numPages;i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(it=>it.str).join(' ') + '\n';
+  }
+  if(text.trim().length < 20){
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({scale:2});
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width; canvas.height = viewport.height;
+    await page.render({canvasContext: canvas.getContext('2d'), viewport}).promise;
+    const blob = await new Promise(res=>canvas.toBlob(res,'image/jpeg',0.9));
+    const worker = await getWorker();
+    const { data } = await worker.recognize(blob);
+    text += '\n' + (data.text||'');
+  }
+  return text;
+}
+
+function norm(s){ return (s||'').toUpperCase().replace(/\s+/g,' ').trim(); }
+
+function extractVIN(text){
+  const m = norm(text).match(/\b[A-HJ-NPR-Z0-9]{17}\b/);
+  return m ? m[0] : '';
+}
+function extractPlate(text){
+  const m = norm(text).match(/[АВЕКМНОРСТУХABEKMHOPCTYX]\s?\d{3}\s?[АВЕКМНОРСТУХABEKMHOPCTYX]{2}\s?\d{2,3}/);
+  return m ? m[0].replace(/\s+/g,'') : '';
+}
+function extractYear(text){
+  const m = norm(text).match(/\b(19[5-9]\d|20[0-4]\d)\b/);
+  return m ? m[0] : '';
+}
+function extractDate(text){
+  const m = text.match(/\b\d{2}[.\/]\d{2}[.\/]\d{4}\b/);
+  return m ? m[0] : '';
+}
+function extractPassportNo(text){
+  const m = norm(text).match(/\b\d{2}\s?\d{2}\s?\d{6}\b/);
+  return m ? m[0].replace(/\s+/g,' ') : '';
+}
+function extractUnitCode(text){
+  const m = text.match(/\b\d{3}-\d{3}\b/);
+  return m ? m[0] : '';
+}
+function extractColorGuess(text){
+  const colors = ['БЕЛЫЙ','ЧЕРНЫЙ','ЧЁРНЫЙ','СЕРЫЙ','СЕРЕБРИСТЫЙ','СИНИЙ','КРАСНЫЙ','ЗЕЛЕНЫЙ','КОРИЧНЕВЫЙ','ЖЕЛТЫЙ','БЕЖЕВЫЙ'];
+  const u = norm(text);
+  for(const c of colors){ if(u.includes(c)) return c; }
+  return '';
+}
+function extractBrandModel(text){
+  const brands = ['TOYOTA','HYUNDAI','KIA','LADA','ВАЗ','NISSAN','MAZDA','FORD','VOLKSWAGEN','SKODA','RENAULT','MITSUBISHI','HONDA','BMW','MERCEDES','AUDI','CHEVROLET','GEELY','CHERY','HAVAL','EXEED'];
+  const u = norm(text);
+  for(const b of brands){ if(u.includes(b)) return b; }
+  return '';
+}
+
+const doc = {
+  autoteka:{}, sts:{}, pts:{}, seller:{}, buyer:{}
+};
+
+async function runOCR(){
+  showStep(1);
+  const tasks = [];
+  if(files.autoteka) tasks.push(['autoteka', files.autoteka]);
+  if(files.sts_front) tasks.push(['sts_front', files.sts_front]);
+  if(files.sts_back) tasks.push(['sts_back', files.sts_back]);
+  if(files.pts) tasks.push(['pts', files.pts]);
+  if(files.seller_main) tasks.push(['seller_main', files.seller_main]);
+  if(files.seller_reg) tasks.push(['seller_reg', files.seller_reg]);
+  if(files.buyer_main) tasks.push(['buyer_main', files.buyer_main]);
+  if(files.buyer_reg) tasks.push(['buyer_reg', files.buyer_reg]);
+
+  if(tasks.length === 0){
+    toast('Загрузите хотя бы один документ.');
+    showStep(0);
+    return;
+  }
+
+  const bar = document.getElementById('ocrBar');
+  const label = document.getElementById('ocrCurrentLabel');
+  const log = document.getElementById('ocrLog');
+  const names = {
+    autoteka:'Отчёт Автотеки', sts_front:'СТС (лицевая)', sts_back:'СТС (оборот)',
+    pts:'ПТС / ЭПТС', seller_main:'Паспорт продавца (разворот)', seller_reg:'Паспорт продавца (регистрация)',
+    buyer_main:'Паспорт покупателя (разворот)', buyer_reg:'Паспорт покупателя (регистрация)'
+  };
+
+  const rawText = {};
+  for(let i=0;i<tasks.length;i++){
+    const [slot, file] = tasks[i];
+    label.textContent = names[slot] + '…';
+    bar.style.width = Math.round((i/tasks.length)*100)+'%';
+    try{
+      let text = '';
+      if(file.type === 'application/pdf'){
+        text = await pdfToText(file);
       } else {
-        status.textContent = 'Файл не выбран';
-        status.classList.remove('upload-status--ok', 'upload-status--warn', 'upload-status--err');
+        text = await ocrImageFile(file, slot);
       }
-
-      updateChecklist();
+      rawText[slot] = text;
+      log.textContent = 'Готово: ' + names[slot];
+    } catch(err){
+      rawText[slot] = '';
+      log.textContent = 'Не удалось распознать: ' + names[slot] + ' — заполните поле вручную.';
     }
+  }
+  bar.style.width = '100%';
+  label.textContent = 'Готово';
 
-    uploadInputs.forEach(input => {
-      input.addEventListener('change', () => updateUploadStatus(input));
-    });
+  if(ocrWorker){ try{ await ocrWorker.terminate(); }catch(e){} ocrWorker=null; }
 
-    function updateChecklist() {
-      const stsFrontOk = document.getElementById('sts-front').files.length > 0;
-      const stsBackOk = document.getElementById('sts-back').files.length > 0;
-      const ptsOk = document.getElementById('pts-epts').files.length > 0;
-      const sellerMainOk = document.getElementById('seller-passport-main').files.length > 0;
-      const sellerRegOk = document.getElementById('seller-passport-reg').files.length > 0;
-      const buyerMainOk = document.getElementById('buyer-passport-main').files.length > 0;
-      const buyerRegOk = document.getElementById('buyer-passport-reg').files.length > 0;
-      const vin = document.getElementById('vin').value.trim();
-      const price = document.getElementById('deal-price').value.trim();
-      const date = document.getElementById('deal-date').value.trim();
-      const place = document.getElementById('deal-place').value.trim();
+  buildDocData(rawText);
+  fillReviewForm();
+  runCrossCheck();
+  setTimeout(()=>showStep(2), 400);
+}
 
-      // СТС
-      if (stsFrontOk && stsBackOk) setChecklistIcon('sts', 'ok');
-      else if (stsFrontOk || stsBackOk) setChecklistIcon('sts', 'warn');
-      else setChecklistIcon('sts', 'err');
+function buildDocData(rawText){
+  const stsText = norm((rawText.sts_front||'') + ' ' + (rawText.sts_back||''));
+  const ptsText = norm(rawText.pts||'');
+  const autotekaText = norm(rawText.autoteka||'');
 
-      // ПТС / ЭПТС
-      setChecklistIcon('pts', ptsOk ? 'ok' : 'warn');
+  doc.sts = {
+    vin: extractVIN(stsText), plate: extractPlate(stsText), year: extractYear(stsText),
+    brand: extractBrandModel(stsText), color: extractColorGuess(stsText),
+    stsNo: extractPassportNo(stsText), stsDate: extractDate(stsText)
+  };
+  doc.pts = {
+    vin: extractVIN(ptsText), year: extractYear(ptsText), brand: extractBrandModel(ptsText),
+    color: extractColorGuess(ptsText), ptsNo: extractPassportNo(ptsText), ptsDate: extractDate(ptsText)
+  };
+  doc.autoteka = {
+    vin: extractVIN(autotekaText), plate: extractPlate(autotekaText), year: extractYear(autotekaText),
+    hasRestriction: /ОГРАНИЧЕН|ЗАПРЕТ/.test(autotekaText),
+    hasPledge: /ЗАЛОГ/.test(autotekaText),
+    hasWanted: /РОЗЫСК/.test(autotekaText),
+    hasAccident: /ДТП|АВАРИ/.test(autotekaText),
+    hasTaxi: /ТАКСИ/.test(autotekaText)
+  };
 
-      // Продавец
-      if (sellerMainOk && sellerRegOk) setChecklistIcon('seller', 'ok');
-      else if (sellerMainOk || sellerRegOk) setChecklistIcon('seller', 'warn');
-      else setChecklistIcon('seller', 'err');
+  doc.seller = {
+    fio: extractFIO(rawText.seller_main), dob: extractDate(rawText.seller_main||''),
+    passport: extractPassportNo(rawText.seller_main||''), unit: extractUnitCode(rawText.seller_main||''),
+    issuer: extractIssuer(rawText.seller_main), issueDate: extractDate(rawText.seller_main||''),
+    address: extractAddress(rawText.seller_reg)
+  };
+  doc.buyer = {
+    fio: extractFIO(rawText.buyer_main), dob: extractDate(rawText.buyer_main||''),
+    passport: extractPassportNo(rawText.buyer_main||''), unit: extractUnitCode(rawText.buyer_main||''),
+    issuer: extractIssuer(rawText.buyer_main), issueDate: extractDate(rawText.buyer_main||''),
+    address: extractAddress(rawText.buyer_reg)
+  };
+}
 
-      // Покупатель
-      if (buyerMainOk && buyerRegOk) setChecklistIcon('buyer', 'ok');
-      else if (buyerMainOk || buyerRegOk) setChecklistIcon('buyer', 'warn');
-      else setChecklistIcon('buyer', 'err');
+function extractFIO(text){
+  if(!text) return '';
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const cand = lines.find(l=>/^[А-ЯЁ\s\-]{6,40}$/.test(l.toUpperCase()) && l.split(' ').length>=2);
+  return cand ? cand.toUpperCase() : '';
+}
+function extractIssuer(text){
+  if(!text) return '';
+  const m = text.match(/(УМВД|ОВД|УФМС|ГУ МВД)[^\n]{0,60}/i);
+  return m ? m[0].trim() : '';
+}
+function extractAddress(text){
+  if(!text) return '';
+  const m = text.match(/(Г\.|ГОР\.|ОБЛ\.|РЕСП\.)[^\n]{5,80}/i);
+  return m ? m[0].trim() : '';
+}
 
-      // VIN
-      if (vin.length === 17) setChecklistIcon('vin', 'ok');
-      else if (vin.length > 0) setChecklistIcon('vin', 'warn');
-      else setChecklistIcon('vin', 'err');
+function fillReviewForm(){
+  const set = (id,val)=>{ const el=document.getElementById(id); if(el && val) el.value = val; };
+  set('f_vin', doc.sts.vin || doc.pts.vin || doc.autoteka.vin);
+  set('f_brand', doc.sts.brand || doc.pts.brand);
+  set('f_year', doc.sts.year || doc.pts.year || doc.autoteka.year);
+  set('f_plate', doc.sts.plate || doc.autoteka.plate);
+  set('f_color', doc.sts.color || doc.pts.color);
+  set('f_ptsNo', doc.pts.ptsNo);
+  set('f_ptsDate', doc.pts.ptsDate);
+  set('f_stsNo', doc.sts.stsNo);
+  set('f_stsDate', doc.sts.stsDate);
 
-      // Цена/дата/место
-      if (price && date && place) setChecklistIcon('price', 'ok');
-      else if (price || date || place) setChecklistIcon('price', 'warn');
-      else setChecklistIcon('price', 'err');
+  set('s_fio', doc.seller.fio); set('s_dob', doc.seller.dob); set('s_passport', doc.seller.passport);
+  set('s_unit', doc.seller.unit); set('s_issuer', doc.seller.issuer); set('s_issueDate', doc.seller.issueDate);
+  set('s_address', doc.seller.address);
+
+  set('b_fio', doc.buyer.fio); set('b_dob', doc.buyer.dob); set('b_passport', doc.buyer.passport);
+  set('b_unit', doc.buyer.unit); set('b_issuer', doc.buyer.issuer); set('b_issueDate', doc.buyer.issueDate);
+  set('b_address', doc.buyer.address);
+
+  const risks = [];
+  if(doc.autoteka.hasRestriction) risks.push('Обнаружены ограничения/запреты');
+  if(doc.autoteka.hasPledge) risks.push('Возможен залог');
+  if(doc.autoteka.hasWanted) risks.push('Возможен розыск');
+  if(doc.autoteka.hasAccident) risks.push('Упоминание ДТП');
+  if(doc.autoteka.hasTaxi) risks.push('Использование в такси');
+  const risksEl = document.getElementById('autotekaRisks');
+  if(!doc.autoteka.vin && !doc.autoteka.plate){
+    risksEl.textContent = 'Отчёт не загружен или не распознан — проверьте вручную на автотека.ру.';
+  } else if(risks.length===0){
+    risksEl.innerHTML = '<span style="color:var(--green);font-weight:600;">Явных рисков в отчёте не найдено.</span>';
+  } else {
+    risksEl.innerHTML = risks.map(r=>'<div style="color:var(--red);font-weight:600;margin-bottom:4px;">⚠ '+r+'</div>').join('');
+  }
+}
+
+let hasCriticalConflict = false;
+
+function runCrossCheck(){
+  const list = document.getElementById('conflictList');
+  const items = [];
+  hasCriticalConflict = false;
+
+  function compare(label, values){
+    const present = values.filter(v=>v.val);
+    if(present.length < 2){
+      items.push({level:'warn', text:label+': недостаточно данных для сверки — проверьте вручную.'});
+      return;
     }
-
-    ['vin','deal-price','deal-date','deal-place'].forEach(id => {
-      const el = document.getElementById(id);
-      el.addEventListener('input', updateChecklist);
-    });
-
-    // --- OCR — распознавание документов через Tesseract.js ---
-    const goOcrBtn = document.getElementById('go-ocr');
-
-    async function ocrImageFile(file) {
-      if (!file) return '';
-      // Только изображения — PDF пока не трогаем, чтобы не обещать невозможное
-      if (!file.type.startsWith('image/')) {
-        return '';
-      }
-      const imageUrl = URL.createObjectURL(file);
-      try {
-        const result = await Tesseract.recognize(imageUrl, 'rus', {
-          logger: () => {}
-        });
-        URL.revokeObjectURL(imageUrl);
-        return result.data.text || '';
-      } catch (e) {
-        URL.revokeObjectURL(imageUrl);
-        console.error('OCR error', e);
-        return '';
-      }
+    const uniq = new Set(present.map(p=>p.val.replace(/\s+/g,'')));
+    if(uniq.size === 1){
+      items.push({level:'ok', text:label+': совпадает во всех документах ('+present.map(p=>p.src).join(', ')+').'});
+    } else {
+      items.push({level:'err', text:label+': РАЗНЫЕ значения — '+present.map(p=>p.src+': '+p.val).join(' vs ')});
+      hasCriticalConflict = true;
     }
+  }
 
-    function smartExtractVin(text) {
-      const match = text.match(/[A-HJ-NPR-Z0-9]{17}/i);
-      return match ? match[0].toUpperCase() : '';
-    }
+  compare('VIN', [
+    {src:'СТС', val: doc.sts.vin}, {src:'ПТС/ЭПТС', val: doc.pts.vin}, {src:'Автотека', val: doc.autoteka.vin}
+  ]);
+  compare('Госномер', [
+    {src:'СТС', val: doc.sts.plate}, {src:'Автотека', val: doc.autoteka.plate}
+  ]);
+  compare('Год выпуска', [
+    {src:'СТС', val: doc.sts.year}, {src:'ПТС/ЭПТС', val: doc.pts.year}, {src:'Автотека', val: doc.autoteka.year}
+  ]);
+  compare('Цвет', [
+    {src:'СТС', val: doc.sts.color}, {src:'ПТС/ЭПТС', val: doc.pts.color}
+  ]);
 
-    function smartExtractPlate(text) {
-      const match = text.match(/[АВЕКМНОРСТУХ]\d{3}[АВЕКМНОРСТУХ]{2}\d{2,3}/iu);
-      return match ? match[0].toUpperCase() : '';
-    }
+  list.innerHTML = items.map(it=>{
+    const dot = it.level==='ok' ? 'dot-ok' : it.level==='warn' ? 'dot-warn' : 'dot-err';
+    return '<div class="summary-item"><div class="summary-dot '+dot+'"></div><div class="summary-text"><div class="v">'+it.text+'</div></div></div>';
+  }).join('');
 
-    function smartExtractYear(text) {
-      const match = text.match(/(19|20)\d{2}/);
-      return match ? match[0] : '';
-    }
+  const conflictCard = document.getElementById('conflictCard');
+  if(hasCriticalConflict){
+    conflictCard.style.borderColor = 'var(--red)';
+  } else {
+    conflictCard.style.borderColor = 'var(--border)';
+  }
+}
 
-    function smartExtractName(text) {
-      // Очень грубо: ищем Фамилия Имя Отчество в верхней части паспорта/СТС
-      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-      const candidate = lines.find(l => /[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+/.test(l));
-      return candidate || '';
-    }
+function buildContract(){
+  const price = document.getElementById('price').value || '______';
+  const priceWords = price !== '______' ? numberToWords(parseInt(price,10)) : '';
+  const date = document.getElementById('dealDate').value || '____________';
+  const place = document.getElementById('dealPlace').value || '_______________';
 
-    async function runOcr() {
-      setStep(2);
+  const V = id => document.getElementById(id).value || '_______________';
 
-      goOcrBtn.disabled = true;
-      goOcrBtn.textContent = 'Распознаю…';
+  const text = `ДОГОВОР КУПЛИ-ПРОДАЖИ ТРАНСПОРТНОГО СРЕДСТВА
 
-      // Пробуем вытащить VIN/госномер/год из СТС/ПТС
-      const stsFrontFile = document.getElementById('sts-front').files[0];
-      const stsBackFile  = document.getElementById('sts-back').files[0];
-      const ptsFiles     = Array.from(document.getElementById('pts-epts').files || []);
+${place}                                                     ${date}
 
-      let vinText = '';
-      let vinValue = document.getElementById('vin').value.trim();
-      let plateValue = document.getElementById('plate').value.trim();
-      let yearValue = document.getElementById('year').value.trim();
-      let makeModelValue = document.getElementById('make-model').value.trim();
-
-      const sources = [stsFrontFile, stsBackFile, ptsFiles[0]].filter(Boolean);
-
-      for (const file of sources) {
-        const text = await ocrImageFile(file);
-        vinText += '\n' + text;
-
-        if (!vinValue) {
-          const v = smartExtractVin(text);
-          if (v) vinValue = v;
-        }
-        if (!plateValue) {
-          const p = smartExtractPlate(text);
-          if (p) plateValue = p;
-        }
-        if (!yearValue) {
-          const y = smartExtractYear(text);
-          if (y) yearValue = y;
-        }
-        if (!makeModelValue) {
-          // Марка/модель считаем строкой, где есть латиница/цифры
-          const line = text.split(/\r?\n/).find(l => /[A-Za-zА-Яа-я].*\d{4}?/.test(l));
-          if (line) makeModelValue = line.trim();
-        }
-      }
-
-      if (vinValue) document.getElementById('vin').value = vinValue;
-      if (plateValue) document.getElementById('plate').value = plateValue;
-      if (yearValue) document.getElementById('year').value = yearValue;
-      if (makeModelValue) document.getElementById('make-model').value = makeModelValue;
-
-      // ФИО и паспорта прода/покупателя
-      const sellerMainFile = document.getElementById('seller-passport-main').files[0];
-      const sellerRegFile  = document.getElementById('seller-passport-reg').files[0];
-      const buyerMainFile  = document.getElementById('buyer-passport-main').files[0];
-      const buyerRegFile   = document.getElementById('buyer-passport-reg').files[0];
-
-      if (sellerMainFile) {
-        const text = await ocrImageFile(sellerMainFile);
-        const name = smartExtractName(text);
-        if (name) document.getElementById('seller-name').value = name;
-      }
-      if (buyerMainFile) {
-        const text = await ocrImageFile(buyerMainFile);
-        const name = smartExtractName(text);
-        if (name) document.getElementById('buyer-name').value = name;
-      }
-
-      // В любом случае пользователь должен глазами всё проверить
-      updateChecklist();
-      goOcrBtn.disabled = false;
-      goOcrBtn.textContent = 'Распознать документы →';
-    }
-
-    goOcrBtn.addEventListener('click', () => {
-      runOcr().catch(err => {
-        console.error(err);
-        alert('Не удалось распознать документы. Проверьте качество фото и попробуйте ещё раз.');
-        goOcrBtn.disabled = false;
-        goOcrBtn.textContent = 'Распознать документы →';
-      });
-    });
-
-    // --- переход к договору с жёсткими проверками ---
-    document.getElementById('go-contract').addEventListener('click', () => {
-      updateChecklist();
-      const vinIcon = checklistIcons.vin;
-      const priceIcon = checklistIcons.price;
-      const anyErr = [checklistIcons.sts, checklistIcons.pts, checklistIcons.seller, checklistIcons.buyer, vinIcon, priceIcon]
-        .some(icon => icon.classList.contains('err'));
-
-      if (anyErr) {
-        alert('Есть критичные незаполненные пункты (красные кружки). Договор не будет сформирован, пока не поправите.');
-        return;
-      }
-      setStep(3);
-    });
-
-    // --- генерация договора и DOC-файла ---
-    const preview = document.getElementById('contract-preview');
-    const generateBtn = document.getElementById('generate-contract');
-
-    function formatDateHuman(value) {
-      if (!value) return '';
-      const [y,m,d] = value.split('-');
-      return `${d}.${m}.${y}`;
-    }
-
-    function numberWordsRub(value) {
-      const n = Number(String(value).replace(/[^\d]/g, ''));
-      if (!Number.isFinite(n) || n <= 0) return '';
-      return n.toLocaleString('ru-RU') + ' (рублей)';
-    }
-
-    generateBtn.addEventListener('click', () => {
-      const vin  = document.getElementById('vin').value.trim();
-      const plate = document.getElementById('plate').value.trim();
-      const makeModel = document.getElementById('make-model').value.trim();
-      const year = document.getElementById('year').value.trim();
-      const sellerName = document.getElementById('seller-name').value.trim();
-      const sellerPassport = document.getElementById('seller-passport').value.trim();
-      const sellerAddress = document.getElementById('seller-address').value.trim();
-      const buyerName = document.getElementById('buyer-name').value.trim();
-      const buyerPassport = document.getElementById('buyer-passport').value.trim();
-      const buyerAddress = document.getElementById('buyer-address').value.trim();
-      const price = document.getElementById('deal-price').value.trim();
-      const date = document.getElementById('deal-date').value.trim();
-      const place = document.getElementById('deal-place').value.trim();
-      const number = document.getElementById('deal-number').value.trim();
-
-      if (!vin || vin.length !== 17 || !makeModel || !year || !sellerName || !buyerName || !price || !date || !place) {
-        alert('Для формирования договора заполните VIN (17 символов), марку/модель, год, ФИО сторон, цену, дату и место.');
-        return;
-      }
-
-      const dateHuman = formatDateHuman(date);
-      const priceWords = numberWordsRub(price);
-
-      const contractText =
-`ДОГОВОР КУПЛИ-ПРОДАЖИ ТРАНСПОРТНОГО СРЕДСТВА${number ? ` № ${number}` : ''}
-
-${place}, ${dateHuman}
-
-Продавец: ${sellerName}, паспорт ${sellerPassport}, зарегистрирован(а) по адресу: ${sellerAddress}.
-Покупатель: ${buyerName}, паспорт ${buyerPassport}, зарегистрирован(а) по адресу: ${buyerAddress}.
-
-Продавец и Покупатель далее совместно именуемые «Стороны» заключили настоящий договор о нижеследующем.
+${V('s_fio')} (далее — «Продавец»), с одной стороны, и ${V('b_fio')} (далее — «Покупатель»), с другой стороны, совместно именуемые «Стороны», заключили настоящий договор о нижеследующем:
 
 1. ПРЕДМЕТ ДОГОВОРА
+1.1. Продавец передаёт в собственность, а Покупатель принимает и оплачивает транспортное средство со следующими характеристиками:
+— Марка, модель: ${V('f_brand')} ${V('f_model')}
+— Год выпуска: ${V('f_year')}
+— Идентификационный номер (VIN): ${V('f_vin')}
+— Государственный регистрационный знак: ${V('f_plate')}
+— Цвет кузова: ${V('f_color')}
+— Номер двигателя: ${V('f_engine')}
+— Номер кузова: ${V('f_body')}
+— Номер шасси (рамы): ${V('f_chassis')}
+— Паспорт транспортного средства (ЭПТС): ${V('f_ptsNo')} от ${V('f_ptsDate')}
+— Свидетельство о регистрации ТС: ${V('f_stsNo')} от ${V('f_stsDate')}
 
-1.1. Продавец передаёт в собственность Покупателя, а Покупатель принимает и оплачивает транспортное средство:
-— марка, модель: ${makeModel};
-— идентификационный номер (VIN): ${vin};
-— год выпуска: ${year};
-— государственный регистрационный знак: ${plate || 'без госномера/не указан'};
-— иные данные согласно ПТС/выписке ЭПТС и СТС.
-
-1.2. На момент заключения договора транспортное средство принадлежит Продавцу на праве собственности, что подтверждается ПТС/выпиской ЭПТС и сведениями регистрирующего органа.
+1.2. Продавец подтверждает, что перед заключением договора Покупателю предоставлен отчёт сервиса «Автотека» об истории транспортного средства, ограничения, залоги и иные обременения по данным отчёта на дату его формирования отсутствуют либо указаны Сторонами отдельно.
 
 2. ЦЕНА И ПОРЯДОК РАСЧЁТОВ
+2.1. Цена транспортного средства составляет ${price} (${priceWords}) рублей.
+2.2. Расчёт между Сторонами произведён в полном объёме до подписания настоящего договора / производится в момент подписания настоящего договора.
 
-2.1. Стороны согласовали цену транспортного средства в размере ${priceWords || price + ' (рублей)'}.
+3. ПЕРЕДАЧА ТРАНСПОРТНОГО СРЕДСТВА
+3.1. Продавец передаёт, а Покупатель принимает транспортное средство, а также относящиеся к нему документы и комплект ключей в момент подписания настоящего договора.
+3.2. Право собственности на транспортное средство переходит к Покупателю с момента подписания настоящего договора и передачи транспортного средства (ст. 223, 224, 456 ГК РФ).
 
-2.2. Покупатель обязуется оплатить указанную цену Продавцу единовременно до подписания настоящего договора либо одновременно с его подписанием. Передачу денежных средств Стороны удостоверяют своими подписями в разделе 5 настоящего договора.
+4. ПОДТВЕРЖДЕНИЯ СТОРОН
+4.1. Продавец подтверждает, что является законным собственником транспортного средства, оно не заложено, не находится под арестом или запретом, не является предметом спора третьих лиц.
+4.2. Стороны подтверждают, что действуют добровольно, находятся в здравом уме и понимают значение своих действий.
 
-3. ЗАЯВЛЕНИЯ И ГАРАНТИИ ПРОДАВЦА
+5. ОБРАБОТКА ПЕРСОНАЛЬНЫХ ДАННЫХ
+5.1. Стороны предоставляют друг другу персональные данные исключительно в целях заключения и исполнения настоящего договора в соответствии со ст. 6, ч. 8 ст. 9 Федерального закона от 27.07.2006 № 152-ФЗ «О персональных данных».
 
-3.1. Продавец заявляет, что на момент заключения настоящего договора транспортное средство:
-— не находится в залоге и не является предметом иных обеспечительных обязательств;
-— не арестовано и не находится в розыске;
-— не обременено правами третьих лиц;
-— не является предметом спора.
+6. РЕКВИЗИТЫ СТОРОН
 
-3.2. Продавец подтверждает, что представленные ПТС/выписка ЭПТС и СТС содержат достоверные сведения о транспортном средстве.
+ПРОДАВЕЦ:
+ФИО: ${V('s_fio')}
+Дата рождения: ${V('s_dob')}
+Паспорт: ${V('s_passport')}, выдан ${V('s_issuer')}, ${V('s_issueDate')}, код подразделения ${V('s_unit')}
+Адрес регистрации: ${V('s_address')}
+Подпись: _______________________
 
-3.3. Покупатель подтверждает, что ознакомлен с техническим состоянием транспортного средства, осмотрел его и претензий к Продавцу по состоянию не имеет.
+ПОКУПАТЕЛЬ:
+ФИО: ${V('b_fio')}
+Дата рождения: ${V('b_dob')}
+Паспорт: ${V('b_passport')}, выдан ${V('b_issuer')}, ${V('b_issueDate')}, код подразделения ${V('b_unit')}
+Адрес регистрации: ${V('b_address')}
+Подпись: _______________________
+`;
+  return text;
+}
 
-4. ПРОЧИЕ УСЛОВИЯ
+function numberToWords(n){
+  if(!n || isNaN(n)) return '';
+  try{
+    return new Intl.NumberFormat('ru-RU').format(n) + ' рублей';
+  }catch(e){ return String(n); }
+}
 
-4.1. Право собственности на транспортное средство переходит к Покупателю с момента подписания настоящего договора и фактической передачи транспортного средства, ключей и документов (ПТС/выписка ЭПТС, СТС).
-
-4.2. Покупатель обязуется в разумный срок осуществить регистрацию транспортного средства на себя в установленном порядке.
-
-4.3. Настоящий договор составлен в трёх экземплярах, имеющих равную юридическую силу: по одному для каждой из Сторон и один для предъявления в регистрирующий орган.
-
-5. ПОДПИСИ СТОРОН
-
-Продавец:  ________________________________   / ${sellerName} /
-
-Покупатель: ________________________________   / ${buyerName} /
-
-Отметка о передаче транспортного средства и расчёте:
-
-Продавец: «Транспортное средство передал, денежные средства получил.»
-Подпись: ________________________________   / ${sellerName} /
-
-Покупатель: «Транспортное средство принял, денежные средства передал.»
-Подпись: ________________________________   / ${buyerName} /`;
-
-      // обновляем предпросмотр
-      preview.innerHTML = '';
-      const header = document.createElement('div');
-      header.className = 'preview-header';
-      const h2 = document.createElement('h2');
-      h2.textContent = 'Черновик договора купли‑продажи';
-      const span = document.createElement('span');
-      span.textContent = 'Проверьте реквизиты и условия перед распечаткой и подписью.';
-      header.appendChild(h2);
-      header.appendChild(span);
-      preview.appendChild(header);
-
-      const pre = document.createElement('pre');
-      pre.textContent = contractText;
-      preview.appendChild(pre);
-
-      // создаём DOC-файл
-      const safeHtml = contractText
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;');
-      const blob = new Blob(
-        [`<html><head><meta charset="utf-8"></head><body><pre>${safeHtml}</pre></body></html>`],
-        { type: 'application/msword' }
-      );
-
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'ДКП-автомобиля.doc';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        URL.revokeObjectURL(a.href);
-        a.remove();
-      }, 500);
-
-      setTimeout(() => {
-        if (confirm('Сохранить также PDF? Откроется окно печати вашего браузера.')) {
-          window.print();
-        }
-      }, 600);
-    });
-
-    // стартовая инициализация
-    updateChecklist();
-  </script>
+document.getElementById('btnNext').addEventListener('click', async ()=>{
+  if(currentStep === 0){
+    await runOCR();
+  } else if(currentStep === 2){
+    if(hasCriticalConflict){
+      toast('Есть конфликт данных (например VIN). Проверьте оригиналы перед продолжением.', 4000);
+    }
+    const text = buildContract();
+    document.getElementById('contractText').textContent = text;
+    showStep(3);
+  } else if(currentStep === 3){
+    window.print();
+  }
+});
+</script>
 </body>
 </html>
